@@ -101,14 +101,14 @@ def match(request, match_id):
 # TODO actions (handling POST request):
 # log in
 # log out (user)
-# create tournament (user)
-# create season (tournament, user)
-# delete tournament (tournament, user)
+# create tournament (user) -- django admin
+# create season (tournament, user) -- django admin
+# delete tournament (tournament, user) -- django admin
 # create player (tournament, user)
-# delete player (tournament, player, user)
+# delete player (tournament, player, user) -- django admin
 # create team (tournament, user)
 # update team (tournament, team, user)
-# delete team (tournament, team, user)
+# delete team (tournament, team, user) -- django admin
 # invite to team (tournament, team, player, user)
 # request team (tournament, team, player, user)
 # reject player invitation (tournament, team, player, user, playerinvite)

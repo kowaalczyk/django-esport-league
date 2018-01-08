@@ -7,6 +7,9 @@ from django.db import models
 class Faculty(models.Model):
     name = models.CharField(max_length=60)
 
+    def __str__(self):
+        return self.name
+
 
 class User(models.Model):
     facebook_id = models.IntegerField()
@@ -16,6 +19,11 @@ class User(models.Model):
 
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.name
+
+    # def joinable_tournaments(self):
+
 
 class Tournament(models.Model):
     game_name = models.CharField(max_length=60)
@@ -23,17 +31,27 @@ class Tournament(models.Model):
     season_end = models.DateTimeField()
     team_size = models.IntegerField()
 
+    def __str__(self):
+        return self.game_name
+
 
 class Team(models.Model):
+    name = models.CharField(max_length=120)
     is_public = models.BooleanField(default=True)
 
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 class Player(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return "{} in {}".format(self.user.name, self.tournament.game_name)
 
 
 class Match(models.Model):
@@ -45,6 +63,9 @@ class Match(models.Model):
 
     inviting_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='inviting_matches')
     guest_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='guest_matches')
+
+    def __str__(self):
+        return "{} vs. {}".format(self.inviting_team.name, self.guest_team.name)
 
 
 class ScoreProposition(models.Model):

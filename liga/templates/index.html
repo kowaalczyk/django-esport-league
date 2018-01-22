@@ -1,0 +1,13 @@
+{# TODO: Check if more html is necessary #}
+
+{% for tournament in tournament_list %}
+    <div>
+        <h1> {{ tournament.game_name }} </h1>
+        <form action="/create-player/">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Join"/>
+        </form>
+    </div>
+    {% if not forloop.last %} <hr/> {% endif %}
+{% endfor %}

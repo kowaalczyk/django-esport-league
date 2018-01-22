@@ -1,18 +1,25 @@
 from datetime import datetime, date
 
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
-from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match
+from liga import forms
+from liga.forms import JoinTournamentForm
+from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player
 
 
 def index(request):
     # TODO: require sign in user
     tournament_list = Tournament.objects.all()
     # TODO: split to tournaments whre user is a player and joinable tournaments
+    tournament_forms = [forms.JoinTournamentForm().set_data() for _ in tournament_list]
+    for i, form in tournament_forms:
+        form.set_data(tournament_list[i].id)
+
     context = {
         'tournament_list': tournament_list,
+        'tournament_forms': tournament_forms,
     }
     return render(request, 'index.html', context)
 
@@ -97,6 +104,20 @@ def match(request, match_id):
         'match': match
     }
     return render(request, 'match.html', context)
+
+
+def create_player(request):
+    user = 0  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+    form = JoinTournamentForm(request.POST)
+    new_player = Player(
+        tournament=form.cleaned_data['hidden_tournament_id_field'],
+        user=user,
+    )
+    # TODO: Check if there is a need to specify team=None (or null)
+    new_player.save()
+    return HttpResponseRedirect('tournament', args=new_player.tournament_id)
 
 # TODO actions (handling POST request):
 # log in

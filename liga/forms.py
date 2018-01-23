@@ -1,29 +1,41 @@
 from django import forms
 
 
-# Form rendered for each joinable tournament on index page
-# TODO: This should only show submit button - check before creating other forms
 # action: post request to create_player
 class JoinTournamentForm(forms.Form):
     tournament_name = ''
     hidden_tournament_id_field = forms.IntegerField(
-        label='THIS SHOULD BE HIDDEN !!!',
+        label="Pretend you've never seen this ;)",
         widget=forms.HiddenInput
     )
 
-    def set_data(self, tournament_name, tournament_id):
-        self.tournament_name = tournament_name
-        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament_id
-        self.fields['hidden_tournament_id_field'].empty_value = tournament_id
-        self.fields['hidden_tournament_id_field'].choices = (tournament_id, tournament_id)
-        self.fields['hidden_tournament_id_field'].initial = tournament_id
+    def set_data(self, tournament):
+        self.tournament_name = tournament.game_name
+
+        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament.id
+        self.fields['hidden_tournament_id_field'].empty_value = tournament.id
+        self.fields['hidden_tournament_id_field'].choices = (tournament.id, tournament.id)
+        self.fields['hidden_tournament_id_field'].initial = tournament.id
         return self
 
-#
-# # action: post request to create_team/:tournament_id
-# class CreateTeamForm(forms.Form):
-#     # TODO
-#
+
+# action: post request to create_team/:tournament_id
+class CreateTeamForm(forms.Form):
+    team_name = forms.CharField(label='Team name')
+    is_public = forms.BooleanField(label='Publicly visible')
+    hidden_tournament_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput
+    )
+
+    def set_data(self, tournament):
+        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament.id
+        self.fields['hidden_tournament_id_field'].empty_value = tournament.id
+        self.fields['hidden_tournament_id_field'].choices = (tournament.id, tournament.id)
+        self.fields['hidden_tournament_id_field'].initial = tournament.id
+        return self
+
+
 # # action: post request to update_team
 # class UpdateTeamForm(forms.Form):
 #     # TODO

@@ -1,27 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% if has_team %}
-
-    <h3>
-        {{ team.name }}
-        {% if team.is_public %}
-            <span class="text-muted">  (public)</span>
-        {% endif %}
-    </h3>
+    <h1>{{ tournament.game_name }}</h1>
 
     <p>
-        Your team has {{ team.players.count }} players,
-        while {{ tournament.team_size }} players per team are allowed in the tournament.
+        The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
+        and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
     </p>
+    {% if has_team %}
 
-    <h5>Your teammates</h5>
-    <ul>
-        {% for p in team.players %}
-            <li>{{ p.user.name }}</li>
+        <h2>Your team: {{ player_team.name }}</h2>
+        <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
+            Team profile
+        </a>
+
+    {% else %}
+        <p>You don't seem to play in any teams in this tournament :(</p>
+    {% endif %}
+
+    <h2>Scoreboard</h2>
+    <ol>
+        {% for t in teams %}
+            <li>
+                {{ t.name }}
+                {% if has_team and t.id == player_team.id %}
+                    (your team) -
+                    <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
+                        team profile
+                    </a>
+                {% endif %}
+                {# TODO: Option to challenge team for a match if it is playable #}
+                {# TODO: Team score #}
+            </li>
         {% endfor %}
-    </ul>
-
-{% endif %}
+    </ol>
 
 {% endblock %}

@@ -3,8 +3,7 @@
 
     <h1>{{ tournament.game_name }}</h1>
     <p>
-        The tournament starts at {{ tournament.season_start  }}.
-        {# TODO: Datetime is not showing up :c #}
+        The tournament starts at {{ tournament.season_start|date:'Y-m-d H:i'  }}.
     </p>
 
     {% if has_team %}
@@ -16,18 +15,18 @@
         </h3>
 
         <p>
-            Your team has {{ team.players.count }} players,
+            Your team has {{ team_players_count }} players,
             while {{ tournament.team_size }} players per team are allowed in the tournament.
         </p>
 
-        <h5>Your teammates</h5>
+        <h3>Your teammates</h3>
         <ul>
-            {% for p in team.players %}
+            {% for p in team_players %}
                 <li>{{ p.user.name }}</li>
             {% endfor %}
         </ul>
 
-        <h5>Team requests</h5>
+        <h3>Team requests</h3>
         <ul>
             {% for p in free_players %}
                 {# TODO: Form to accept or decline the request #}
@@ -35,10 +34,10 @@
             {% endfor %}
         </ul>
 
-        <h5>Free players</h5>
+        <h3>Free players</h3>
         <ul>
             {% for p in free_players %}
-                {# TODO: Use form with option to invite specific players #}
+                {# TODO: Form to invite specific players #}
                 <li>{{ p.user.name }}</li>
             {% endfor %}
         </ul>
@@ -46,10 +45,19 @@
     {% else %}
         <p>
             You are currently not a member of any team.
-            Join the team to be able to take part in the tournament.
+            Join the team or create a new one to be able to take part in the tournament.
         </p>
 
-        <h5>Invites to team</h5>
+        <h3>Create team</h3>
+        <div>
+            <form action="{% url 'create-team' tournament_id=tournament.id %}" method="post">
+                {% csrf_token %}
+                {{ create_team_form }}
+                <input type="submit" value="Create"/>
+            </form>
+        </div>
+
+        <h3>Invites to team</h3>
         <ul>
             {% for team in player_invites %}
                 {# TODO: Form to accept or decline the invite #}
@@ -57,7 +65,7 @@
             {% endfor %}
         </ul>
 
-        <h5>Public teams</h5>
+        <h3>Public teams</h3>
         <ul>
             {% for team in public_teams %}
                 {# TODO: Form to end team request #}

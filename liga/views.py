@@ -4,22 +4,21 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
 from liga import forms
-from liga.forms import JoinTournamentForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 
 
 # Create your views here.
 
 
+# noinspection SpellCheckingInspection
 def index(request):
-    user_id = 1 # TODO: require sign in user
+    user_id = 1  # TODO: require sign in user
     user = User.objects.get(id=user_id)
 
-    playable_tournaments = user.playable_tournaments
-    joinable_tournaments = user.joinable_tournaments
-    joinable_tournament_forms = [forms.JoinTournamentForm().set_data(t.game_name, t.id) for t in joinable_tournaments]
+    playable_tournaments = user.playable_tournaments.all()
+    joinable_tournaments = user.joinable_tournaments.all()
+    joinable_tournament_forms = [forms.JoinTournamentForm().set_data(t) for t in joinable_tournaments]
 
-    # TODO: Forms only for joinable tournaments
     context = {
         'playable_tournaments': playable_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
@@ -31,79 +30,79 @@ def tournament(request, tournament_id):
     user_id = 1  # TODO: require sign in user
     user = User.objects.get(id=user_id)
 
-    tournament = get_object_or_404(Tournament, id=tournament_id)
-    player = get_object_or_404(tournament.players, user_id=user_id)
-    before_season = datetime.now(timezone.utc) < tournament.season_start
+    current_tournament = get_object_or_404(Tournament, id=tournament_id)
+    player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+    has_team = player.team is not None
+
+    before_season = datetime.now(timezone.utc) < current_tournament.season_start
 
     if before_season:
-        has_team = player.team is not None
-        start_date = tournament.season_start
+        start_date = current_tournament.season_start
         if has_team:
-            team_requests = TeamRequest.objects.filter(team=player.team)
-            free_players = tournament.players.filter(team=None)
+            team_requests = TeamRequest.objects.filter(team=player.team).all()
+            free_players = current_tournament.players.filter(team=None).all()
             context = {
-                'tournament': tournament,
+                'tournament': current_tournament,
                 'has_team': has_team,
                 'team': player.team,
+                'team_players': player.team.players.all(),
+                'team_players_count': player.team.players.count(),
                 'team_requests': team_requests,
                 'free_players': free_players,
                 'start_date': start_date,
             }
         else:
-            public_teams = tournament.teams.filter(is_public=True)
-            player_invites = PlayerInvite.objects.filter(player=player)
+            public_teams = current_tournament.teams.filter(is_public=True).all()
+            player_invites = PlayerInvite.objects.filter(player=player).all()
+            create_team_form = forms.CreateTeamForm().set_data(current_tournament)
             context = {
+                'tournament': current_tournament,
                 'has_team': has_team,
+                'create_team_form': create_team_form,
                 'public_teams': public_teams,
                 'player_invites': player_invites,
             }
         return render(request, 'tournament_before_season.html', context)
 
     else:
-        team = player.team
-        if team is None:
-            other_teams = tournament.teams
-        else:
-            score = 0  # TODO: # of teams 2x select count for score is too much, add score field to the team
-            other_teams = tournament.teams.exclude(team_id=team.id)  # TODO: order_by score
-
+        # during season
+        teams = current_tournament.teams.all()  # TODO: .order_by(score)
         context = {
-            'team': team,
-            'other_teams': other_teams
+            'tournament': current_tournament,
+            'has_team': has_team,
+            'player_team': player.team,
+            'teams': teams,
         }
         return render(request, 'tournament_during_season.html', context)
 
 
-def team(request, team_id):
-    user_id = 1  # TODO: get from session
-    team = get_object_or_404(Team, pk=team_id)
-    player = get_object_or_404(team.player_set, user=user)
-    tournament = get_object_or_404(team.tournament)
-    before_season = tournament.season_end < datetime.now() or tournament.season_start > datetime.now()
+def team(request, tournament_id, team_id):
+    user_id = 1  # TODO: require sign in user
+    user = User.objects.get(id=user_id)
 
-    if before_season:
+    current_tournament = get_object_or_404(Tournament, id=tournament_id)
+    current_team = get_object_or_404(Team, id=team_id, tournament_id=tournament_id)
+    player = get_object_or_404(Player, user_id=user_id, team_id=team_id)
+
+    season_ended = current_tournament.season_end < datetime.now(timezone.utc)
+    if season_ended:
+        return redirect('tournaments', tournament_id=current_tournament.id)
+
+    else:
+        possible_opponents = current_team.possible_oponenets()
+        played_matches = current_team.matches.order_by()
+
         pending_matches = None
         played_matches = None
         possible_opponents = None
-    else:
-        # TODO: This is way too complex, move queries to model and simplify (raw sql?)
-        pending_inviting_matches = team.inviting_matches.filter(expires_at__lte=date.today())
-        pendding_guest_matches = team.guest_matches.filter(expires_at__lte=date.today())
-        pending_matches = pending_inviting_matches | pendding_guest_matches
-        played_inviting_matches = team.inviting_matches.filter(expires_at__gt=date.today())
-        played_quest_matches = team.guest_matches.filter(expires_at__gt=date.today())
-        played_matches = played_inviting_matches | played_quest_matches
-        # TODO: Delete all matches after season is finished, or filter match dates here
-        possible_opponents = tournament.team_set.exclude(pk__in=played_matches)
 
-    context = {
-        'before_season': before_season,
-        'team_members': team.player_set,
-        'pending_matches': pending_matches,
-        'match_history': played_matches,
-        'possible_opponents': possible_opponents
-    }
-    return render(request, 'team.html', context)
+        context = {
+            'team_members': current_team.players,
+            'pending_matches': pending_matches,
+            'match_history': played_matches,
+            'possible_opponents': possible_opponents
+        }
+        return render(request, 'team.html', context)
 
 
 def match(request, match_id):
@@ -123,7 +122,7 @@ def create_player(request):
     if request.method != 'POST':
         return HttpResponseNotFound()
 
-    form = JoinTournamentForm(request.POST)
+    form = forms.JoinTournamentForm(request.POST)
     if form.is_valid():
         player, created = Player.objects.get_or_create(
             tournament_id=form.cleaned_data['hidden_tournament_id_field'],
@@ -139,6 +138,36 @@ def create_player(request):
         print('ERROR: form error')
         print(form.errors)
         return HttpResponseNotFound()
+
+
+def create_team(request, tournament_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    player = get_object_or_404(Player, user_id=user_id, tournament_id=tournament_id)
+
+    form = forms.CreateTeamForm(request.POST)
+    if form.is_valid():
+        new_team, created = Team.objects.get_or_create(
+            tournament_id=tournament_id,
+            name=form.cleaned_data['team_name'],
+            is_public=form.cleaned_data['is_public']
+        )
+        if created:
+            print('CREATED:', new_team)
+            player.team_id = new_team.id
+            player.save()
+
+            return redirect('tournament', tournament_id=player.tournament_id)
+        else:
+            print('WARNING:', 'unable to create new team')
+            # TODO: Notify user about failure (probably team name was already used)
+            return redirect('tournament', tournament_id=player.tournament_id)
+    else:
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('tournament', tournament_id=tournament_id)
 
 # TODO actions (handling POST request):
 # log in

@@ -1,1 +1,69 @@
-TODO
+{% extends "base.html" %}
+{% block content %}
+
+    <h1>{{ tournament.game_name }}</h1>
+    <p>
+        The tournament starts at {{ tournament.season_start  }}.
+        {# TODO: Datetime is not showing up :c #}
+    </p>
+
+    {% if has_team %}
+        <h3>
+            {{ team.name }}
+            {% if team.is_public %}
+                <span class="text-muted">  (public)</span>
+            {% endif %}
+        </h3>
+
+        <p>
+            Your team has {{ team.players.count }} players,
+            while {{ tournament.team_size }} players per team are allowed in the tournament.
+        </p>
+
+        <h5>Your teammates</h5>
+        <ul>
+            {% for p in team.players %}
+                <li>{{ p.user.name }}</li>
+            {% endfor %}
+        </ul>
+
+        <h5>Team requests</h5>
+        <ul>
+            {% for p in free_players %}
+                {# TODO: Form to accept or decline the request #}
+                <li>{{ p.user.name }}</li>
+            {% endfor %}
+        </ul>
+
+        <h5>Free players</h5>
+        <ul>
+            {% for p in free_players %}
+                {# TODO: Use form with option to invite specific players #}
+                <li>{{ p.user.name }}</li>
+            {% endfor %}
+        </ul>
+
+    {% else %}
+        <p>
+            You are currently not a member of any team.
+            Join the team to be able to take part in the tournament.
+        </p>
+
+        <h5>Invites to team</h5>
+        <ul>
+            {% for team in player_invites %}
+                {# TODO: Form to accept or decline the invite #}
+                <li>{{ team.name }}</li>
+            {% endfor %}
+        </ul>
+
+        <h5>Public teams</h5>
+        <ul>
+            {% for team in public_teams %}
+                {# TODO: Form to end team request #}
+                <li>{{ team.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+{% endblock %}

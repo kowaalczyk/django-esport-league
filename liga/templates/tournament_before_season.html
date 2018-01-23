@@ -36,9 +36,15 @@
 
         <h3>Free players</h3>
         <ul>
-            {% for p in free_players %}
-                {# TODO: Form to invite specific players #}
-                <li>{{ p.user.name }}</li>
+            {% for f in free_players_invite_forms %}
+                <li>
+                    {{ f.player_name }}
+                    <form action="{% url 'create-player-invite' tournament_id=tournament.id team_id=team.id %}" method="post">
+                        {% csrf_token %}
+                        {{ f }}
+                        <input type="submit" value="Invite to team"/>
+                    </form>
+                </li>
             {% endfor %}
         </ul>
 
@@ -68,7 +74,7 @@
         <h3>Public teams</h3>
         <ul>
             {% for team in public_teams %}
-                {# TODO: Form to end team request #}
+                {# TODO: Form to add team request #}
                 <li>{{ team.name }}</li>
             {% endfor %}
         </ul>

@@ -1,11 +1,25 @@
 from django.urls import path
 
 from . import views
-
 urlpatterns = [
     path('', views.index, name='index'),
-    path('tournament/<int:tournament_id>/', views.tournament, name='tournament'),
-    path('tournament/<int:tournament_id>/teams/<int:team_id>', views.tournament, name='team'),
-    path('create-player/', views.create_player, name='join-tournament'),
-    path('create-team/<int:tournament_id>/', views.create_team, name='create-team'),
+    path('tournament/<int:tournament_id>/',
+         views.tournament,
+         name='tournament'),
+    path('tournament/<int:tournament_id>/players/create',
+         views.create_player,
+         name='join-tournament'),
+    path('tournament/<int:tournament_id>/teams/<int:team_id>',
+         views.tournament,
+         name='team'),
+    path('tournament/<int:tournament_id>/teams/create',
+         views.create_team,
+         name='create-team'),
+    path('tournament/<int:tournament_id>/teams/<int:team_id>/invitations/create',
+         views.create_player_invite,
+         name='create-player-invite'),
+    path('tournament/<int:tournament_id>/matches/<int:match_id>',
+         views.match,
+         name='match'),
 ]
+

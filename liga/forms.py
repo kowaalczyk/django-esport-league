@@ -11,10 +11,6 @@ class JoinTournamentForm(forms.Form):
 
     def set_data(self, tournament):
         self.tournament_name = tournament.game_name
-
-        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament.id
-        self.fields['hidden_tournament_id_field'].empty_value = tournament.id
-        self.fields['hidden_tournament_id_field'].choices = (tournament.id, tournament.id)
         self.fields['hidden_tournament_id_field'].initial = tournament.id
         return self
 
@@ -29,21 +25,31 @@ class CreateTeamForm(forms.Form):
     )
 
     def set_data(self, tournament):
-        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament.id
-        self.fields['hidden_tournament_id_field'].empty_value = tournament.id
-        self.fields['hidden_tournament_id_field'].choices = (tournament.id, tournament.id)
         self.fields['hidden_tournament_id_field'].initial = tournament.id
         return self
 
 
-# # action: post request to update_team
-# class UpdateTeamForm(forms.Form):
-#     # TODO
-#
-# # action: post request to invite_player_to_team
-# class InviteToTeamForm(forms.Form):
-#     # TODO
-#
+# action: post request to invite_player_to_team
+class CreatePlayerInviteForm(forms.Form):
+    player_name = ''
+
+    hidden_team_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+    hidden_player_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+
+    def set_data(self, team, player):
+        self.player_name = player.user.name
+        self.fields['hidden_player_id_field'].initial = player.id
+        self.fields['hidden_team_id_field'].initial = team.id
+
+        return self
+
+
 # # action: post request to request_team
 # class RequestTeamForm(forms.Form):
 #     # TODO

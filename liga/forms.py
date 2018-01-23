@@ -5,15 +5,19 @@ from django import forms
 # TODO: This should only show submit button - check before creating other forms
 # action: post request to create_player
 class JoinTournamentForm(forms.Form):
+    tournament_name = ''
     hidden_tournament_id_field = forms.IntegerField(
         label='THIS SHOULD BE HIDDEN !!!',
         widget=forms.HiddenInput
     )
 
-    def set_data(self, team_id):
-        self.hidden_tournament_id_field.coerce = lambda x: team_id
-        self.hidden_tournament_id_field.empty_value = team_id
-        self.hidden_tournament_id_field.choices = (team_id, team_id)
+    def set_data(self, tournament_name, tournament_id):
+        self.tournament_name = tournament_name
+        self.fields['hidden_tournament_id_field'].coerce = lambda x: tournament_id
+        self.fields['hidden_tournament_id_field'].empty_value = tournament_id
+        self.fields['hidden_tournament_id_field'].choices = (tournament_id, tournament_id)
+        self.fields['hidden_tournament_id_field'].initial = tournament_id
+        return self
 
 #
 # # action: post request to create_team/:tournament_id

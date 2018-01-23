@@ -1,13 +1,18 @@
-{# TODO: Check if more html is necessary #}
+{% extends "base.html" %}
+{% block content %}
 
-{% for tournament in tournament_list %}
+{# Join tournament forms #}
+{% for f in tournament_forms %}
     <div>
-        <h1> {{ tournament.game_name }} </h1>
-        <form action="/create-player/">
+        <h1> {{ f.tournament_name }} </h1>
+        <form action="{% url 'join-tournament' %}" method="post">
             {% csrf_token %}
-            {{ form }}
+
+            {{ f }}
             <input type="submit" value="Join"/>
         </form>
     </div>
     {% if not forloop.last %} <hr/> {% endif %}
 {% endfor %}
+
+{% endblock %}

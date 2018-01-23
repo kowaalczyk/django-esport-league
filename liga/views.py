@@ -1,7 +1,7 @@
 from datetime import datetime, date
 
 from django.http import HttpResponseNotFound, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
 from liga import forms
@@ -13,20 +13,17 @@ def index(request):
     # TODO: require sign in user
     tournament_list = Tournament.objects.all()
     # TODO: split to tournaments whre user is a player and joinable tournaments
-    tournament_forms = [forms.JoinTournamentForm().set_data() for _ in tournament_list]
-    for i, form in tournament_forms:
-        form.set_data(tournament_list[i].id)
+    tournament_forms = [forms.JoinTournamentForm().set_data(t.game_name, t.id) for t in tournament_list]
 
     context = {
-        'tournament_list': tournament_list,
         'tournament_forms': tournament_forms,
     }
     return render(request, 'index.html', context)
 
 
 def tournament(request, tournament_id):
-    user = 0  # TODO: get from session
-    tournament = get_object_or_404(Tournament, pk=tournament_id)
+    user_id = 1  # TODO: get from session
+    tournament = get_object_or_404(Tournament, id=tournament_id)
     player = get_object_or_404(tournament.player_set, user=user)
     before_season = tournament.season_end < datetime.now() or tournament.season_start > datetime.now()
 
@@ -63,7 +60,7 @@ def tournament(request, tournament_id):
 
 
 def team(request, team_id):
-    user = 0  # TODO: get from session
+    user_id = 1  # TODO: get from session
     team = get_object_or_404(Team, pk=team_id)
     player = get_object_or_404(team.player_set, user=user)
     tournament = get_object_or_404(team.tournament)
@@ -95,7 +92,7 @@ def team(request, team_id):
 
 
 def match(request, match_id):
-    user = 0  # TODO: get from session
+    user_id = 1  # TODO: get from session
     match = get_object_or_404(Match, pk=match_id)
     player = match.inviting_team.player_set.filter(user=user) | match.guest_team.player_set.filter(user=user)
     if player.count() == 0:
@@ -107,17 +104,24 @@ def match(request, match_id):
 
 
 def create_player(request):
-    user = 0  # TODO: get from session
+    user_id = 1  # TODO: get from session
     if request.method != 'POST':
         return HttpResponseNotFound()
+
     form = JoinTournamentForm(request.POST)
-    new_player = Player(
-        tournament=form.cleaned_data['hidden_tournament_id_field'],
-        user=user,
-    )
-    # TODO: Check if there is a need to specify team=None (or null)
-    new_player.save()
-    return HttpResponseRedirect('tournament', args=new_player.tournament_id)
+    if form.is_valid():
+        new_player = Player.objects.create(
+            tournament_id=form.cleaned_data['hidden_tournament_id_field'],
+            user_id=user_id,
+            team=None,
+        )
+        new_player.save()
+        return redirect('tournament', tournament_id=new_player.tournament_id)
+
+    else:
+        print('form errors:')
+        print(form.errors)
+        return HttpResponseNotFound()
 
 # TODO actions (handling POST request):
 # log in

@@ -1,1 +1,27 @@
-TODO
+{% extends "base.html" %}
+{% block content %}
+
+{% if has_team %}
+
+    <h3>
+        {{ team.name }}
+        {% if team.is_public %}
+            <span class="text-muted">  (public)</span>
+        {% endif %}
+    </h3>
+
+    <p>
+        Your team has {{ team.players.count }} players,
+        while {{ tournament.team_size }} players per team are allowed in the tournament.
+    </p>
+
+    <h5>Your teammates</h5>
+    <ul>
+        {% for p in team.players %}
+            <li>{{ p.user.name }}</li>
+        {% endfor %}
+    </ul>
+
+{% endif %}
+
+{% endblock %}

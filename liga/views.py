@@ -1,57 +1,72 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
-from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
-# Create your views here.
 from liga import forms
 from liga.forms import JoinTournamentForm
-from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player
+from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
+
+
+# Create your views here.
 
 
 def index(request):
-    # TODO: require sign in user
-    tournament_list = Tournament.objects.all()
-    # TODO: split to tournaments whre user is a player and joinable tournaments
-    tournament_forms = [forms.JoinTournamentForm().set_data(t.game_name, t.id) for t in tournament_list]
+    user_id = 1 # TODO: require sign in user
+    user = User.objects.get(id=user_id)
 
+    playable_tournaments = user.playable_tournaments
+    joinable_tournaments = user.joinable_tournaments
+    joinable_tournament_forms = [forms.JoinTournamentForm().set_data(t.game_name, t.id) for t in joinable_tournaments]
+
+    # TODO: Forms only for joinable tournaments
     context = {
-        'tournament_forms': tournament_forms,
+        'playable_tournaments': playable_tournaments,
+        'joinable_tournament_forms': joinable_tournament_forms,
     }
     return render(request, 'index.html', context)
 
 
 def tournament(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    user_id = 1  # TODO: require sign in user
+    user = User.objects.get(id=user_id)
+
     tournament = get_object_or_404(Tournament, id=tournament_id)
-    player = get_object_or_404(tournament.player_set, user=user)
-    before_season = tournament.season_end < datetime.now() or tournament.season_start > datetime.now()
+    player = get_object_or_404(tournament.players, user_id=user_id)
+    before_season = datetime.now(timezone.utc) < tournament.season_start
 
     if before_season:
         has_team = player.team is not None
+        start_date = tournament.season_start
         if has_team:
             team_requests = TeamRequest.objects.filter(team=player.team)
-            free_players = tournament.player_set.filter(team=None)
+            free_players = tournament.players.filter(team=None)
             context = {
+                'tournament': tournament,
                 'has_team': has_team,
                 'team': player.team,
                 'team_requests': team_requests,
-                'free_players': free_players
+                'free_players': free_players,
+                'start_date': start_date,
             }
         else:
-            public_teams = tournament.team_set.filter(is_public=True)
+            public_teams = tournament.teams.filter(is_public=True)
             player_invites = PlayerInvite.objects.filter(player=player)
             context = {
                 'has_team': has_team,
                 'public_teams': public_teams,
-                'player_invites': player_invites
+                'player_invites': player_invites,
             }
         return render(request, 'tournament_before_season.html', context)
 
     else:
-        team = get_object_or_404(player.team)
-        score = 0  # TODO: # of teams 2x select count for score is too much, add score field to the team
-        other_teams = tournament.team_set.exclude(team=team)  # TODO: order_by score
+        team = player.team
+        if team is None:
+            other_teams = tournament.teams
+        else:
+            score = 0  # TODO: # of teams 2x select count for score is too much, add score field to the team
+            other_teams = tournament.teams.exclude(team_id=team.id)  # TODO: order_by score
+
         context = {
             'team': team,
             'other_teams': other_teams

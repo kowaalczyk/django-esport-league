@@ -110,16 +110,18 @@ def create_player(request):
 
     form = JoinTournamentForm(request.POST)
     if form.is_valid():
-        new_player = Player.objects.create(
+        player, created = Player.objects.get_or_create(
             tournament_id=form.cleaned_data['hidden_tournament_id_field'],
             user_id=user_id,
-            team=None,
         )
-        new_player.save()
-        return redirect('tournament', tournament_id=new_player.tournament_id)
+        if created:
+            print('CREATED:', player)
+        else:
+            print('WARNING:', 'new player already in tournament')
+        return redirect('tournament', tournament_id=player.tournament_id)
 
     else:
-        print('form errors:')
+        print('ERROR: form error')
         print(form.errors)
         return HttpResponseNotFound()
 

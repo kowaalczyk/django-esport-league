@@ -10,13 +10,6 @@ from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Play
 from liga import helpers
 
 
-# Create your views here.
-
-@login_required
-def home(request):
-    return render(request, 'liga/home.html')
-
-
 # noinspection SpellCheckingInspection
 @login_required
 def index(request):
@@ -105,7 +98,7 @@ def tournament(request, tournament_id):
 @login_required
 def team(request, tournament_id, team_id):
     fid = request.user.social_auth.filter(provider='facebook')[0].uid
-    user_id = User.objects.get(facebook_id=fid)
+    user = User.objects.get(facebook_id=fid)
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     current_team = get_object_or_404(Team, id=team_id, tournament_id=tournament_id)
@@ -354,6 +347,7 @@ def accept_player_invite(request, tournament_id):
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
 
+
 @login_required
 def accept_team_request(request, tournament_id):
     fid = request.user.social_auth.filter(provider='facebook')[0].uid
@@ -383,6 +377,7 @@ def accept_team_request(request, tournament_id):
         print('ERROR: form error')
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
+
 
 @login_required
 def create_match(request, tournament_id):
@@ -424,6 +419,7 @@ def create_match(request, tournament_id):
         print('ERROR: form error')
         print(form.errors)
         return redirect('team', tournament_id=tournament_id, team_id=current_team.id)
+
 
 @login_required
 def create_score_proposition(request, tournament_id, match_id):

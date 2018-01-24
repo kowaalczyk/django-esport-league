@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
-    AcceptPlayerInviteForm, AcceptTeamRequestForm, CreateMatchForm
+    AcceptPlayerInviteForm, AcceptTeamRequestForm, CreateMatchForm, CreateScorePropositionForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 from liga import helpers
 
@@ -153,19 +153,26 @@ def match(request, tournament_id, match_id):
     if current_match.inviting_team != current_team and current_match.guest_team != current_team:
         return HttpResponseNotFound()
 
-    my_score_proposition = current_match.my_score_proposition(current_team)
-    opponent_score_proposition = current_match.opponent_score_proposition(current_team)
     expired = current_match.expires_at < datetime.now(timezone.utc).date()
-
     scored = current_match.guest_score is not None and current_match.inviting_score is not None
     won = not expired and scored and current_match.my_score(current_team) > current_match.opponent_score(current_team)
+
+    opponent_score_proposition = current_match.opponent_score_proposition(current_team)
+    my_score_proposition = current_match.my_score_proposition(current_team)
+    if my_score_proposition is None and not expired:
+        my_score_proposition_form = CreateScorePropositionForm().set_data(current_team, current_match)
+    else:
+        my_score_proposition_form = None
+
     context = {
+        'tournament': current_tournament,
         'match': current_match,
         'opponent': current_match.other_team(current_team),
         'expired': expired,
         'scored': scored,
         'won': won,
         'my_score_proposition': my_score_proposition,
+        'my_score_proposition_form': my_score_proposition_form,
         'opponent_score_proposition': opponent_score_proposition,
     }
     return render(request, 'liga/match.html', context)
@@ -397,15 +404,52 @@ def create_match(request, tournament_id):
             return HttpResponseNotFound()
 
         print('CREATED:', current_match)
-        return redirect('tournament', tournament_id=tournament_id)
+        return redirect('team', tournament_id=tournament_id, team_id=current_team.id)
 
     else:
         # invalid form TODO: Render errors
         print('ERROR: form error')
         print(form.errors)
-        return redirect('tournament', tournament_id=tournament_id)
+        return redirect('team', tournament_id=tournament_id, team_id=current_team.id)
+
+
+def create_score_proposition(request, tournament_id, match_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    current_player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+    current_team = current_player.team
+    if current_team is None:
+        return HttpResponseNotFound()
+
+    current_match = get_object_or_404(Match,
+                                      id=match_id,
+                                      inviting_team__tournament_id=tournament_id,
+                                      guest_team__tournament_id=tournament_id)
+    if current_team != current_match.inviting_team and current_team != current_match.guest_team:
+        return HttpResponseNotFound()
+
+    form = CreateScorePropositionForm(request.POST)
+    if form.is_valid():
+        updated = current_match.update_proposition(current_team,
+                                                   form.cleaned_data['my_score'],
+                                                   form.cleaned_data['opponent_score'])
+        if updated:
+            print('UPDATE score_proposition:', current_match)
+            return redirect('match', tournament_id=tournament_id, match_id=match_id)
+
+        else:
+            print('WARNING: match score propositions not updated!')
+            # TODO: Render errors
+            return redirect('match', tournament_id=tournament_id, match_id=match_id)
+
+    else:
+        # invalid form TODO: Render errors
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('match', tournament_id=tournament_id, match_id=match_id)
 
 # TODO actions (handling POST request):
 # log in
 # log out (user)
-# create score proposition (tournament, match, user)

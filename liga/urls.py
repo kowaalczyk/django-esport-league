@@ -39,4 +39,7 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/matches/create/',
          views.create_match,
          name='create-match'),
+    path('tournament/<int:tournament_id>/matches/<int:match_id>/score-propositions/create/',
+         views.create_score_proposition,
+         name='create-score-proposition'),
 ]

@@ -126,5 +126,28 @@ class CreateMatchForm(forms.Form):
         return self
 
 
-# class CreateScorePropositionForm(forms.Form):
-#     # TODO
+class CreateScorePropositionForm(forms.Form):
+    hidden_match_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+    # TODO: Check if this is secure (see create_score_proposition view and data extraction from form fields)
+    hidden_team_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+    my_score = forms.IntegerField(
+        label="Inviting team score",
+        widget=forms.NumberInput,
+    )
+    opponent_score = forms.IntegerField(
+        label="Inviting team score",
+        widget=forms.NumberInput,
+    )
+
+    def set_data(self, my_team, match):
+        self.fields['hidden_match_id_field'].initial = match.id
+        self.fields['hidden_team_id_field'].initial = my_team.id
+        self.fields['my_score'].label = "{} score".format(my_team.name)
+        self.fields['opponent_score'].label = "Opponent score"
+        return self

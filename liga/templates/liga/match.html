@@ -26,7 +26,11 @@
     {# my proposition #}
     {% if my_score_proposition is None %}
         <h3>Sumit your score proposition here</h3>
-        {# TODO: Form #}
+        <form action="{% url 'create-score-proposition' tournament_id=tournament.id match_id=match.id %}" method="post">
+            {% csrf_token %}
+            {{ my_score_proposition_form }}
+            <input type="submit" value="Propose score"/>
+        </form>
     {% else %}
         <h3>Your score proposition</h3>
         <p>
@@ -41,7 +45,7 @@
         <p>Opponent has not submitted their proposition yet.</p>
     {% else %}
         <p>
-            {{ match.inviting_team.name }} - {{ opponent_score_proposition.inviting_score }} points
+            {{ match.inviting_team.name }} - {{ opponent_score_proposition.inviting_score }} points <br>
             {{ match.guest_team.name }} - {{ opponent_score_proposition.guest_score }} points
         </p>
     {% endif %}

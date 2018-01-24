@@ -19,7 +19,10 @@ class JoinTournamentForm(forms.Form):
 # action: post request to create_team/:tournament_id
 class CreateTeamForm(forms.Form):
     team_name = forms.CharField(label='Team name')
-    is_public = forms.BooleanField(label='Publicly visible')
+    is_public = forms.BooleanField(
+        label='Publicly visible',
+        widget=forms.CheckboxInput()
+    )
     hidden_tournament_id_field = forms.IntegerField(
         label="Pretend you've never seen this ;)",
         widget=forms.HiddenInput
@@ -79,7 +82,7 @@ class AcceptPlayerInviteForm(forms.Form):
     )
 
     def set_data(self, invite):
-        self.team_name = invite.team.full_name
+        self.team_name = invite.team.name
         self.fields['hidden_invite_id_field'].initial = invite.id
         return self
 

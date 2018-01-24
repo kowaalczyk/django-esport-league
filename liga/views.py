@@ -4,10 +4,9 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
-
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
-
+from liga import helpers
 
 # Create your views here.
 
@@ -15,10 +14,17 @@ from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Play
 def home(request):
     return render(request, 'liga/home.html')
 
+
 # noinspection SpellCheckingInspection
+@login_required
 def index(request):
-    user_id = 1  # TODO: require sign in user
-    user = User.objects.get(id=user_id)
+    us = request.user.social_auth.filter(provider='facebook')[0]
+    user_id = us.uid
+
+    if not User.objects.filter(facebook_id=user_id):
+        helpers.fill_user_info(us)
+
+    user = User.objects.get(facebook_id=user_id)
 
     playable_tournaments = user.playable_tournaments.all()
     joinable_tournaments = user.joinable_tournaments.all()
@@ -263,7 +269,6 @@ def create_team_requst(request, tournament_id):
         print('ERROR: form error')
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
-
 
 # TODO actions (handling POST request):
 # log in

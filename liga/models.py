@@ -24,12 +24,20 @@ class User(models.Model):
         return self.name
 
     @property
+    def full_name(self):
+        return self.name + ' ' + self.surname
+
+    @property
     def playable_tournaments(self):
         return Tournament.get_ongoing_tournaments().filter(players__user=self)
 
     @property
     def joinable_tournaments(self):
         return Tournament.get_planed_tournaments().exclude(players__user=self)
+
+    @property
+    def planned_tournaments(self):
+        return Tournament.get_planed_tournaments().filter(players__user=self)
 
 
 class Tournament(models.Model):
@@ -170,10 +178,9 @@ class Match(models.Model):
         gh = self.guest_proposition.inviting_score
         hh = self.host_proposition.inviting_score
 
-        if gg == hg and gh == hh:#checking if propositions matching
+        if gg == hg and gh == hh:  # checking if propositions matching
             self.inviting_score = gh
             self.guest_score = gg
-
 
         self.inviting_team.update_score()
         self.guest_team.update_score()

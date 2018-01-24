@@ -36,7 +36,7 @@ def index(request):
 
     context = {
         'playable_tournaments': playable_tournaments,
-        'planned tournaments': planned_tournaments,
+        'planned_tournaments': planned_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
     }
     return render(request, 'liga/index.html', context)

@@ -16,11 +16,13 @@ from liga import helpers
 def home(request):
     return render(request, 'liga/home.html')
 
+
 # noinspection SpellCheckingInspection
-@login_required
+# @login_required
 def index(request):
-    us = request.user.social_auth.filter(provider='facebook')[0]
-    user_id = us.uid
+    # us = request.user.social_auth.filter(provider='facebook')[0]
+    # user_id = us.uid
+    user_id = 1
 
     if not User.objects.filter(facebook_id=user_id):
         helpers.fill_user_info(us)
@@ -28,12 +30,13 @@ def index(request):
     user = User.objects.get(facebook_id=user_id)
 
     playable_tournaments = user.playable_tournaments.all()
+    planned_tournaments = user.planned_tournaments.all()
     joinable_tournaments = user.joinable_tournaments.all()
     joinable_tournament_forms = [JoinTournamentForm().set_data(t) for t in joinable_tournaments]
 
     context = {
         'playable_tournaments': playable_tournaments,
-        # 'planned tournaments': planned_tournaments,
+        'planned tournaments': planned_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
     }
     return render(request, 'liga/index.html', context)
@@ -59,11 +62,13 @@ def tournament(request, tournament_id):
 
             free_players = current_tournament.players.filter(team__isnull=True).all()
             free_player_forms = [CreatePlayerInviteForm().set_data(player.team, fp) for fp in free_players]
+
+            team_members = player.team.players.exclude(id=player.id).all()
             context = {
                 'tournament': current_tournament,
                 'has_team': has_team,
                 'team': player.team,
-                'team_players': player.team.players.all(),
+                'team_players': team_members,
                 'team_players_count': player.team.players.count(),
                 'team_request_accept_forms': team_request_forms,
                 'free_players_invite_forms': free_player_forms,
@@ -88,7 +93,7 @@ def tournament(request, tournament_id):
 
     else:
         # during season
-        teams = current_tournament.teams.all()  # TODO: .order_by(score)
+        teams = current_tournament.teams.order_by('-score').all()
         context = {
             'tournament': current_tournament,
             'has_team': has_team,
@@ -105,7 +110,7 @@ def team(request, tournament_id, team_id):
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     current_team = get_object_or_404(Team, id=team_id, tournament_id=tournament_id)
-    player = get_object_or_404(Player, user_id=user_id, team_id=team_id)
+    player = get_object_or_404(Player, team=current_team, user=user)
 
     season_ended = current_tournament.season_end < datetime.now(timezone.utc)
     if season_ended:
@@ -113,17 +118,17 @@ def team(request, tournament_id, team_id):
 
     else:
         possible_opponents = current_team.possible_oponenets.all()
-        played_matches = current_team.matches.order_by()
+        planned_matches = current_team.planned_matches.all()
+        played_matches = current_team.played_matches.order_by('-expires_at').all()
 
-        pending_matches = None
-        played_matches = None
-        possible_opponents = None
-
+        team_members = current_team.players.exclude(id=player.id).all()
         context = {
-            'team_members': current_team.players,
-            'pending_matches': pending_matches,
-            'match_history': played_matches,
-            'possible_opponents': possible_opponents
+            'team': current_team,
+            'tournament': current_tournament,
+            'team_members': team_members,
+            'planned_matches': planned_matches,
+            'played_matches': played_matches,
+            'possible_opponents': possible_opponents,
         }
         return render(request, 'liga/team.html', context)
 

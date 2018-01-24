@@ -3,36 +3,65 @@
 
     <h1>{{ tournament.game_name }}</h1>
 
-    <p class="flow-text">
+    <p>
         The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
         and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
     </p>
-    {% if has_team %}
 
-        <h2>Your team: {{ player_team.name }}</h2>
-        <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
-            Team profile
-        </a>
+    {% if has_team %}
+        <h3>Your team</h3>
+        <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+                <span class="card-title">{{ player_team.name }}</span>
+                {% if team_members.count > 0 %}
+                    <p>Your teammates:</p>
+                    <ul>
+                        {% for p in team_members %}
+                            <li>{{ p.user.full_name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Your are playing all on your own!</p>
+                {% endif %}
+
+            </div>
+            <div class="card-action">
+                <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
+                    Team profile
+                </a>
+            </form>
+            </div>
+        </div>
 
     {% else %}
         <p class="flow-text">You don't seem to play in any teams in this tournament :(</p>
     {% endif %}
 
-    <h2>Scoreboard</h2>
-    <ol>
-        {% for t in teams %}
-            <li>
-                {{ t.name }}
-                {% if has_team and t.id == player_team.id %}
-                    (your team) -
-                    <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
-                        team profile
-                    </a>
-                {% endif %}
-                {# TODO: option challenge team for a match if playable #}
-                , score: {{ t.score }} points
-            </li>
-        {% endfor %}
-    </ol>
+    <h3>Scoreboard</h3>
+    <table class="highlight">
+        <thead>
+            <tr>
+                <th>Team Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in teams %}
+                <tr>
+                    <td>{{ t.name }}
+                    {% if has_team and t.id == player_team.id %}
+                        <a href="{% url 'team' tournament_id=tournament.id team_id=player_team.id %}">
+                            team profile
+                        </a>
+                    {% endif %}
+                    </td>
+                    <td>
+                        {{ t.score }}
+                    </td>
+                    {# TODO: option challenge team for a match if playable #}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock %}

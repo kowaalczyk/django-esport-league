@@ -3,29 +3,32 @@
 
     <h1>{{ tournament.game_name }}</h1>
 
-    <p class="flow-text">
+    <p>
         The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
         and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
     </p>
 
-    <h2>Your team: {{ team.name }}</h2>
-    <p class="flow-text">
-        Score: {{ team.score }}
-        <br>
-        Position in tournament: {{ team.ranking }}
-        <br>
-    </p>
+    <h3>Your team</h3>
+    <div class="card blue-grey darken-1">
+        <div class="card-content white-text">
+            <span class="card-title">{{ team.name }}</span>
+                <p>
+                    Score: {{ team.score }} <br>
+                    Position in the tournament: {{ team.ranking }} <br>
+                </p>
+            {% if team_members.count > 0 %}
+                <p>Your teammates:</p>
+                <ul>
+                    {% for p in team_members %}
+                        <li>{{ p.user.full_name }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Your are playing all on your own!</p>
+            {% endif %}
 
-    {% if team_members.count > 0 %}
-        <h3>Your teammates</h3>
-        <ul>
-            {% for p in team_members %}
-                <li>{{ p.user.full_name }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="flow-text">Your are playing all on your own!</p>
-    {% endif %}
+        </div>
+    </div>
 
     {% if planned_matches.count > 0 %}
         <h3>Matches to play</h3>

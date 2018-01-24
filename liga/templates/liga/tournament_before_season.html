@@ -2,29 +2,54 @@
 {% block content %}
 
     <h1>{{ tournament.game_name }}</h1>
-    <p class="flow-text">
+
+    <p>
         The tournament starts at {{ tournament.season_start|date:'Y-m-d H:i'  }}.
     </p>
 
     {% if has_team %}
-        <h3>
-            {{ team.name }}
-            {% if team.is_public %}
-                <span class="text-muted">  (public)</span>
-            {% endif %}
-        </h3>
+        {# TEAM #}
+        <h3>Your team</h3>
+        <div class="card-panel">
+            <h4>
+                {{ team.name }}
+                {% if team.is_public %}
+                    <span class="grey-text"><small>PUBLIC</small></span>
+                {% endif %}
+            </h4>
+            <blockquote>
+                Your team has {{ team_players_count }} players,
+                while {{ tournament.team_size }} players per team are allowed in the tournament.
+            </blockquote> {# TODO: Change if team is already full #}
 
-        <p class="flow-text">
-            Your team has {{ team_players_count }} players,
-            while {{ tournament.team_size }} players per team are allowed in the tournament.
-        </p>
+            {# TEAMMATES #}
+            <ul class="collection with-header">
+                <li class="collection-header">
+                    <h5>
+                        Your teammates
+                    </h5>
+                </li>
+                {% for p in team_players %}
+                    <li class="collection-item">{{ p.user.full_name }}</li>
+                {% endfor %}
+            </ul>
 
-        <h3>Your teammates</h3>
-        <ul>
-            {% for p in team_players %}
-                <li>{{ p.user.name }}</li>
-            {% endfor %}
-        </ul>
+            {# TEAM REQUESTS#}
+            {# TODO: Dont display if team is already full #}
+            <ul class="collection with-header">
+                <li class="collection-header">
+                    <h5>
+                        Team requests
+                    </h5>
+                </li>
+                {% for f in team_request_accept_forms %}
+                    <li class="collection-item">{{ p.user.full_name }}</li>
+                {% endfor %}
+            </ul>
+
+            {# TODO: Dont display if team is already full #}
+            {# FREE PLAYERS #}
+        </div>
 
         <h3>Team requests</h3>
         <ul>

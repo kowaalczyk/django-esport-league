@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
-    AcceptPlayerInviteForm
+    AcceptPlayerInviteForm, AcceptTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 
 
@@ -51,6 +51,8 @@ def tournament(request, tournament_id):
         start_date = current_tournament.season_start
         if has_team:
             team_requests = TeamRequest.objects.filter(team=player.team).all()
+            team_request_forms = [AcceptTeamRequestForm().set_data(tr) for tr in team_requests]
+
             free_players = current_tournament.players.filter(team__isnull=True).all()
             free_player_forms = [CreatePlayerInviteForm().set_data(player.team, fp) for fp in free_players]
             context = {
@@ -59,7 +61,7 @@ def tournament(request, tournament_id):
                 'team': player.team,
                 'team_players': player.team.players.all(),
                 'team_players_count': player.team.players.count(),
-                'team_requests': team_requests,
+                'team_request_accept_forms': team_request_forms,
                 'free_players_invite_forms': free_player_forms,
                 'start_date': start_date,
             }
@@ -68,7 +70,7 @@ def tournament(request, tournament_id):
             public_team_forms = [CreateTeamRequestForm().set_data(pt, player) for pt in public_teams]
 
             player_invites = PlayerInvite.objects.filter(player=player).all()
-            player_invite_forms = [AcceptPlayerInviteForm().set_data(i, player) for i in player_invites]
+            player_invite_forms = [AcceptPlayerInviteForm().set_data(i) for i in player_invites]
 
             create_team_form = CreateTeamForm().set_data(current_tournament)
             context = {
@@ -289,7 +291,6 @@ def accept_player_invite(request, tournament_id):
 
     form = AcceptPlayerInviteForm(request.POST)
     if form.is_valid():
-
         player_invite = get_object_or_404(PlayerInvite,
                                           id=form.cleaned_data['hidden_invite_id_field'],
                                           player_id=current_player.id)
@@ -309,10 +310,35 @@ def accept_player_invite(request, tournament_id):
         return redirect('tournament', tournament_id=tournament_id)
 
 
+def accept_team_request(request, tournament_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    current_player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+
+    form = AcceptTeamRequestForm(request.POST)
+    if form.is_valid():
+        team_request = get_object_or_404(TeamRequest,
+                                         id=form.cleaned_data['hidden_team_request_field'],
+                                         team=current_player.team)
+
+        requesting_player = get_object_or_404(Player, id=team_request.player_id, tournament_id=tournament_id)
+
+        requesting_player.team = current_player.team
+        requesting_player.save()
+        team_request.delete()
+
+        return redirect('tournament', tournament_id=tournament_id)
+
+    else:
+        # invalid form
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('tournament', tournament_id=tournament_id)
+
 # TODO actions (handling POST request):
 # log in
 # log out (user)
-# accept team request (tournament, team, player, user, teamrequest)
-# reject team request (tournament, team, player, user, teamrequest)
 # create match (tournament, team, opponent team, user)
 # create score proposition (tournament, match, user)

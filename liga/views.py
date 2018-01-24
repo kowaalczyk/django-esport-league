@@ -3,7 +3,7 @@ from datetime import datetime, date, timezone
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
-from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm
+from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 
 
@@ -23,7 +23,7 @@ def index(request):
         'playable_tournaments': playable_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
     }
-    return render(request, 'index.html', context)
+    return render(request, 'liga/index.html', context)
 
 
 def tournament(request, tournament_id):
@@ -31,6 +31,7 @@ def tournament(request, tournament_id):
     user = User.objects.get(id=user_id)
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
+    print(current_tournament)
     player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
     has_team = player.team is not None
 
@@ -54,16 +55,17 @@ def tournament(request, tournament_id):
             }
         else:
             public_teams = current_tournament.teams.filter(is_public=True).all()
+            public_team_forms = [CreateTeamRequestForm().set_data(pt, player) for pt in public_teams]
             player_invites = PlayerInvite.objects.filter(player=player).all()
             create_team_form = CreateTeamForm().set_data(current_tournament)
             context = {
                 'tournament': current_tournament,
                 'has_team': has_team,
                 'create_team_form': create_team_form,
-                'public_teams': public_teams,
+                'public_teams_request_forms': public_team_forms,
                 'player_invites': player_invites,
             }
-        return render(request, 'tournament_before_season.html', context)
+        return render(request, 'liga/tournament_before_season.html', context)
 
     else:
         # during season
@@ -74,7 +76,7 @@ def tournament(request, tournament_id):
             'player_team': player.team,
             'teams': teams,
         }
-        return render(request, 'tournament_during_season.html', context)
+        return render(request, 'liga/tournament_during_season.html', context)
 
 
 def team(request, tournament_id, team_id):
@@ -103,7 +105,7 @@ def team(request, tournament_id, team_id):
             'match_history': played_matches,
             'possible_opponents': possible_opponents
         }
-        return render(request, 'team.html', context)
+        return render(request, 'liga/team.html', context)
 
 
 def match(request, tournament_id, match_id):
@@ -121,7 +123,7 @@ def match(request, tournament_id, match_id):
     context = {
         'match': match
     }
-    return render(request, 'match.html', context)
+    return render(request, 'liga/match.html', context)
 
 
 def create_player(request):
@@ -179,13 +181,12 @@ def create_team(request, tournament_id):
         return redirect('tournament', tournament_id=tournament_id)
 
 
-def create_player_invite(request, tournament_id, team_id):
+def create_player_invite(request, tournament_id):
     user_id = 1  # TODO: get from session
     if request.method != 'POST':
         return HttpResponseNotFound()
 
-    sending_player = get_object_or_404(Player, user_id=user_id, tournament_id=tournament_id, team=team_id)
-    print('sender:', sending_player)
+    sending_player = get_object_or_404(Player, user_id=user_id, tournament_id=tournament_id)
 
     form = CreatePlayerInviteForm(request.POST)
     if form.is_valid():
@@ -194,12 +195,11 @@ def create_player_invite(request, tournament_id, team_id):
         if form_team_id != sending_player.team_id:
             return HttpResponseNotFound()
 
-        current_team = get_object_or_404(Team, id=team_id)
+        current_team = get_object_or_404(Team, id=form_team_id)
         if current_team is None or current_team.tournament.season_start < datetime.now(timezone.utc):
             # no team or tournament already started
             return HttpResponseNotFound()
 
-        print('receiver:', form.cleaned_data['hidden_player_id_field'])
         invited_player = get_object_or_404(Player,
                                            id=form.cleaned_data['hidden_player_id_field'],
                                            tournament_id=current_team.tournament_id)
@@ -208,7 +208,7 @@ def create_player_invite(request, tournament_id, team_id):
 
         # assuming invites expire at the time of tournament start
         invite, created = PlayerInvite.objects.get_or_create(player=invited_player,
-                                                             team_id=team_id,
+                                                             team=current_team,
                                                              expire_date=current_team.tournament.season_start.date())
         if created:
             print('CREATED:', invite)
@@ -224,11 +224,46 @@ def create_player_invite(request, tournament_id, team_id):
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
 
+
+def create_team_requst(request, tournament_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    sending_player = get_object_or_404(Player, user_id=user_id, tournament_id=tournament_id)
+
+    form = CreateTeamRequestForm(request.POST)
+    if form.is_valid():
+        form_team_id = form.cleaned_data['hidden_team_id_field']
+        form_team = get_object_or_404(Team, id=form_team_id, tournament_id=tournament_id, is_public=True)
+
+        if form_team is None or form_team.tournament.season_start < datetime.now(timezone.utc):
+            # no team or tournament already started
+            return HttpResponseNotFound()
+
+        # assuming team requests expire at the time of tournament start
+        team_request, created = TeamRequest.objects.get_or_create(player=sending_player,
+                                                                  team=form_team,
+                                                                  expire_date=form_team.tournament.season_start.date())
+        if created:
+            print('CREATED:', team_request)
+            return redirect('tournament', tournament_id=tournament_id)
+        else:
+            print('WARNING:', 'unable to create new team')
+            # TODO: Notify user about failure (invite already existed) -- or tournament started? check
+            return redirect('tournament', tournament_id=tournament_id)
+
+    else:
+        # invalid form
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('tournament', tournament_id=tournament_id)
+
+
 # TODO actions (handling POST request):
 # log in
 # log out (user)
 # request team (tournament, team, player, user)
-# reject player invitation (tournament, team, player, user, playerinvite)
 # accept player invitation (tournament, team, player, user, playerinvite)
 # accept team request (tournament, team, player, user, teamrequest)
 # reject team request (tournament, team, player, user, teamrequest)

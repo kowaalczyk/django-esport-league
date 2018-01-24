@@ -46,14 +46,28 @@ class CreatePlayerInviteForm(forms.Form):
         self.player_name = player.user.name
         self.fields['hidden_player_id_field'].initial = player.id
         self.fields['hidden_team_id_field'].initial = team.id
-
         return self
 
 
-# # action: post request to request_team
-# class RequestTeamForm(forms.Form):
-#     # TODO
-#
+# action: post request to request_team
+class CreateTeamRequestForm(forms.Form):
+    team_name = ''
+
+    hidden_team_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+    hidden_player_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+
+    def set_data(self, team, player):
+        self.team_name = team.name
+        self.fields['hidden_player_id_field'].initial = player.id
+        self.fields['hidden_team_id_field'].initial = team.id
+        return self
+
 # # https://docs.djangoproject.com/en/2.0/ref/forms/api/#dynamic-initial-values
 # class ManagePlayerInviteForm(forms.Form):
 #     accept_invite_field = forms.TypedChoiceField(

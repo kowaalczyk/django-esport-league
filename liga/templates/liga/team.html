@@ -3,13 +3,13 @@
 
     <h1>{{ tournament.game_name }}</h1>
 
-    <p>
+    <p class="flow-text">
         The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
         and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
     </p>
 
     <h2>Your team: {{ team.name }}</h2>
-    <p>
+    <p class="flow-text">
         Score: {{ team.score }}
         <br>
         Position in tournament: {{ team.ranking }}
@@ -24,7 +24,7 @@
             {% endfor %}
         </ul>
     {% else %}
-        <p>Your are playing all on your own!</p>
+        <p class="flow-text">Your are playing all on your own!</p>
     {% endif %}
 
     {% if planned_matches.count > 0 %}
@@ -77,7 +77,7 @@
             {% endfor %}
         </ul>
     {% else %}
-        <p>Your match history will appear here.</p>
+        <p class="flow-text">Your match history will appear here.</p>
     {% endif %}
 
 {% endblock %}

@@ -6,9 +6,9 @@
     <h2>{{ match.inviting_team.name }} vs {{ match.guest_team.name }}</h2>
     {% if not scored %}
         {% if expired %}
-            <p>Match expired: scores were not proposed or score propositions did not match :(</p>
+            <p class="flow-text">Match expired: scores were not proposed or score propositions did not match :(</p>
         {% else %}
-            <p>Match will be scored after both teams propose scores.</p>
+            <p class="flow-text">Match will be scored after both teams propose scores.</p>
         {% endif %}
     {% else %}
         <h3>
@@ -18,7 +18,7 @@
                 Your team lost, better luck next time!
             {% endif %}
         </h3>
-        <p>
+        <p class="flow-text">
             {{ match.inviting_score }} : {{ match.guest_score }}
         </p>
     {% endif %}
@@ -33,7 +33,7 @@
         </form>
     {% else %}
         <h3>Your score proposition</h3>
-        <p>
+        <p class="flow-text">
             {{ match.inviting_team.name }} - {{ my_score_proposition.inviting_score }} points
             {{ match.guest_team.name }} - {{ my_score_proposition.guest_score }} points
         </p>
@@ -42,9 +42,9 @@
     {# other team proposition #}
     <h3>Opponent score proposition</h3>
     {% if opponent_score_proposition is None %}
-        <p>Opponent has not submitted their proposition yet.</p>
+        <p class="flow-text">Opponent has not submitted their proposition yet.</p>
     {% else %}
-        <p>
+        <p class="flow-text">
             {{ match.inviting_team.name }} - {{ opponent_score_proposition.inviting_score }} points <br>
             {{ match.guest_team.name }} - {{ opponent_score_proposition.guest_score }} points
         </p>

@@ -1,42 +1,45 @@
 {% extends "liga/base.html" %}
 {% block content %}
 
-    {# Playable tournaments #}
-    <h1>Play now</h1>
-    <ul>
+    <h3>Play now</h3>
+    <div class="collection">
+        {# TODO: Add images and descriptions to tournaments and use cards instead #}
         {% for t in playable_tournaments %}
-            <li>
-                <a href="{% url 'tournament' tournament_id=t.id %}">
-                    {{ t.game_name }}
-                </a>
-            </li>
+            <a href="{% url 'tournament' tournament_id=t.id %}" class="collection-item">
+                {{ t.game_name }}
+            </a>
         {% endfor %}
-    </ul>
+    </div>
 
     {# Tournaments that will start soon #}
-    <h1>Planned tournaments</h1>
-    <ul>
+    <h3>Planned tournaments</h3>
+    <div class="collection">
         {% for t in planned_tournaments %}
-            <li>
-                <a href="{% url 'tournament' tournament_id=t.id %}">
-                    {{ t.game_name }}
-                </a>
-            </li>
+            <a href="{% url 'tournament' tournament_id=t.id %}" class="collection-item">
+                {{ t.game_name }}
+            </a>
         {% endfor %}
-    </ul>
+    </div>
 
     {# Join tournament forms #}
-    <h1>Join other tournaments</h1>
+    <h3>Join other tournaments</h3>
+
     {% for f in joinable_tournament_forms %}
-        <div>
-            <h3> {{ f.tournament_name }} </h3>
-            <form action="{% url 'join-tournament' %}" method="post">
+        <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+                <span class="card-title">{{ f.tournament_name }}</span>
+
+            </div>
+            <div class="card-action">
+                <form action="{% url 'join-tournament' %}" method="post">
                 {% csrf_token %}
                 {{ f }}
-                <input type="submit" value="Join"/>
+                <button class="btn waves-effect waves-light" type="submit" name="action" value="Join">
+                    Join <i class="material-icons right">send</i>
+                </button>
             </form>
+            </div>
         </div>
-        {% if not forloop.last %} <hr/> {% endif %}
     {% endfor %}
 
 {% endblock %}

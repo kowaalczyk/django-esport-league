@@ -3,7 +3,7 @@
 
     <h1>{{ tournament.game_name }}</h1>
 
-    <p>
+    <p class="flow-text">
         The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
         and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
     </p>
@@ -15,7 +15,7 @@
         </a>
 
     {% else %}
-        <p>You don't seem to play in any teams in this tournament :(</p>
+        <p class="flow-text">You don't seem to play in any teams in this tournament :(</p>
     {% endif %}
 
     <h2>Scoreboard</h2>

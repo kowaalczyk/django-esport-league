@@ -2,7 +2,7 @@
 {% block content %}
 
     <h1>{{ tournament.game_name }}</h1>
-    <p>
+    <p class="flow-text">
         The tournament starts at {{ tournament.season_start|date:'Y-m-d H:i'  }}.
     </p>
 
@@ -14,7 +14,7 @@
             {% endif %}
         </h3>
 
-        <p>
+        <p class="flow-text">
             Your team has {{ team_players_count }} players,
             while {{ tournament.team_size }} players per team are allowed in the tournament.
         </p>
@@ -55,7 +55,7 @@
         </ul>
 
     {% else %}
-        <p>
+        <p class="flow-text">
             You are currently not a member of any team.
             Join the team or create a new one to be able to take part in the tournament.
         </p>

@@ -3,8 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <title>Liga Esportowa</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/css/materialize.min.css">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+    </style>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="height=device-height, initial-scale=1.0"/>
 </head>
 <body>
+
+<header>
+
+</header>
+
+<main class="container">
     {% block content %}{% endblock %}
+</main>
+
+<footer class="page-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text">University e-sport league app</h5>
+                <p class="grey-text text-lighten-4"> Completed as an assignemnt for database course at University of Warsaw, fall semester 2017-18. </p>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            © 2018 Krzysztof Kowalczyk, Stanisław Giziński
+            {# TODO: link #}
+            <a class="grey-text text-lighten-4 right" href="#!">Github</a>
+        </div>
+    </div>
+</footer>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.3/js/materialize.min.js"></script>
 </body>
 </html>

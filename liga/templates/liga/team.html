@@ -20,7 +20,7 @@
         <h3>Your teammates</h3>
         <ul>
             {% for p in team_members %}
-                <li>{{ p.user.name }}</li>
+                <li>{{ p.user.full_name }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -45,15 +45,20 @@
         </ul>
     {% endif %}
 
-    {% if possible_opponents.count > 0 %}
+    {% if possible_opponents_count > 0 %}
         <h3>Possible opponents</h3>
         {% if team.score == 0 %}
             Challenge team to a match to score points. <br>
         {% endif %}
         <ul>
-            {% for o in possible_opponents%}
+            {% for f in possible_opponent_challenge_forms %}
                 <li>
-                    {{ o.name }} {# TODO: Create  #}
+                    {{ f.opponent_name }}
+                    <form action="{% url 'create-match' tournament_id=tournament.id %}" method="post">
+                        {% csrf_token %}
+                        {{ f }}
+                        <input type="submit" value="Challenge"/>
+                    </form>
                 </li>
             {% endfor %}
         </ul>

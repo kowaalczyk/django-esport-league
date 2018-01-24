@@ -1,3 +1,4 @@
+import datetime
 from django import forms
 
 
@@ -43,7 +44,7 @@ class CreatePlayerInviteForm(forms.Form):
     )
 
     def set_data(self, team, player):
-        self.player_name = player.user.name  # TODO full_name
+        self.player_name = player.user.full_name
         self.fields['hidden_player_id_field'].initial = player.id
         self.fields['hidden_team_id_field'].initial = team.id
         return self
@@ -78,7 +79,7 @@ class AcceptPlayerInviteForm(forms.Form):
     )
 
     def set_data(self, invite):
-        self.team_name = invite.team.name  # TODO full_name
+        self.team_name = invite.team.full_name
         self.fields['hidden_invite_id_field'].initial = invite.id
         return self
 
@@ -92,14 +93,38 @@ class AcceptTeamRequestForm(forms.Form):
     )
 
     def set_data(self, team_request):
-        self.player_name = team_request.player.user.name  # TODO: full_name
-        print(team_request.player, team_request.player.user.name)
+        self.player_name = team_request.player.user.full_name
         self.fields['hidden_team_request_field'].initial = team_request.id
         return self
 
 
-# class CreateMatchForm(forms.Form):
-#     # TODO
-#
+class CreateMatchForm(forms.Form):
+    opponent_name = ''
+
+    inviting_team_id_hidden_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+    guest_team_id_hidden_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+
+    expires_at = forms.DateField(
+        label="Expire after",
+    )
+    # TODO: Add default and widget !!!
+    suggested_at = forms.DateField(
+        label="Suggested match date",
+    )
+    # TODO: Add default and widget !!!
+
+    def set_data(self, inviting_team, guest_team):
+        self.opponent_name = guest_team.name
+        self.fields['inviting_team_id_hidden_field'].initial = inviting_team.id
+        self.fields['guest_team_id_hidden_field'].initial = guest_team.id
+        return self
+
+
 # class CreateScorePropositionForm(forms.Form):
 #     # TODO

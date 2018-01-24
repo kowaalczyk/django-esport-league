@@ -1,1 +1,49 @@
-TODO
+{% extends "liga/base.html" %}
+{% block content %}
+    <h1>{{ tournament.game_name }}</h1>
+
+    {# overview #}
+    <h2>{{ match.inviting_team.name }} vs {{ match.guest_team.name }}</h2>
+    {% if not scored %}
+        {% if expired %}
+            <p>Match expired: scores were not proposed or score propositions did not match :(</p>
+        {% else %}
+            <p>Match will be scored after both teams propose scores.</p>
+        {% endif %}
+    {% else %}
+        <h3>
+            {% if won %}
+                Your team won, congratulations!
+            {% else %}
+                Your team lost, better luck next time!
+            {% endif %}
+        </h3>
+        <p>
+            {{ match.inviting_score }} : {{ match.guest_score }}
+        </p>
+    {% endif %}
+
+    {# my proposition #}
+    {% if my_score_proposition is None %}
+        <h3>Sumit your score proposition here</h3>
+        {# TODO: Form #}
+    {% else %}
+        <h3>Your score proposition</h3>
+        <p>
+            {{ match.inviting_team.name }} - {{ my_score_proposition.inviting_score }} points
+            {{ match.guest_team.name }} - {{ my_score_proposition.guest_score }} points
+        </p>
+    {% endif %}
+
+    {# other team proposition #}
+    <h3>Opponent score proposition</h3>
+    {% if opponent_score_proposition is None %}
+        <p>Opponent has not submitted their proposition yet.</p>
+    {% else %}
+        <p>
+            {{ match.inviting_team.name }} - {{ opponent_score_proposition.inviting_score }} points
+            {{ match.guest_team.name }} - {{ opponent_score_proposition.guest_score }} points
+        </p>
+    {% endif %}
+
+{% endblock %}

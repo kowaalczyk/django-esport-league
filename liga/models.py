@@ -149,6 +149,36 @@ class Match(models.Model):
                                              on_delete=models.SET_NULL,
                                              related_name='match_g')
 
+    def other_team(self, my_team):
+        if my_team == self.inviting_team:
+            return self.guest_team
+        else:
+            return self.inviting_team
+
+    def my_score_proposition(self, my_team):
+        if my_team == self.inviting_team:
+            return self.host_proposition
+        else:
+            return self.guest_proposition
+
+    def opponent_score_proposition(self, my_team):
+        if my_team == self.inviting_team:
+            return self.guest_proposition
+        else:
+            return self.host_proposition
+
+    def my_score(self, my_team):
+        if my_team == self.inviting_team:
+            return self.inviting_score
+        else:
+            return self.guest_score
+
+    def opponent_score(self, my_team):
+        if my_team == self.inviting_team:
+            return self.guest_score
+        else:
+            return self.inviting_score
+
     def update_proposition(self, team, my_score, opponent_score):
         if team == self.inviting_team:
             if self.host_proposition is not None:

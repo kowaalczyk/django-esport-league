@@ -7,7 +7,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    #url(r'^$', views.home, name='home'),
+    # url(r'^$', views.home, name='home'),
     url(r'^login/$', auth_views.login, name='login'),
     url(r'^logout/$', auth_views.logout, name='logout'),
     url(r'^oauth/', include('social_django.urls', namespace='social')),
@@ -30,10 +30,13 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/requests/create/',
          views.create_team_requst,
          name='create-team-request'),
-    path('tournament/<int:tournament_id>/requests/accept',
+    path('tournament/<int:tournament_id>/requests/accept/',
          views.accept_team_request,
          name='accept-team-request'),
     path('tournament/<int:tournament_id>/matches/<int:match_id>/',
          views.match,
          name='match'),
+    path('tournament/<int:tournament_id>/matches/create/',
+         views.create_match,
+         name='create-match'),
 ]

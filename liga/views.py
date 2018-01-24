@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
-    AcceptPlayerInviteForm, AcceptTeamRequestForm
+    AcceptPlayerInviteForm, AcceptTeamRequestForm, CreateMatchForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 from liga import helpers
 
@@ -118,9 +118,13 @@ def team(request, tournament_id, team_id):
 
     else:
         possible_opponents = current_team.possible_oponenets.all()
+        possible_opponent_challenge_forms = [CreateMatchForm().set_data(current_team, opt)
+                                             for opt in possible_opponents]
+
         planned_matches = current_team.planned_matches.all()
         played_matches = current_team.played_matches.order_by('-expires_at').all()
 
+        print(possible_opponents.count())
         team_members = current_team.players.exclude(id=player.id).all()
         context = {
             'team': current_team,
@@ -128,7 +132,8 @@ def team(request, tournament_id, team_id):
             'team_members': team_members,
             'planned_matches': planned_matches,
             'played_matches': played_matches,
-            'possible_opponents': possible_opponents,
+            'possible_opponents_count': possible_opponents.count(),
+            'possible_opponent_challenge_forms': possible_opponent_challenge_forms,
         }
         return render(request, 'liga/team.html', context)
 
@@ -141,13 +146,27 @@ def match(request, tournament_id, match_id):
     current_match = get_object_or_404(Match, id=match_id)
     player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
     current_team = player.team
+
     if current_team is None:
         return HttpResponseNotFound()
-    player = match.inviting_team.player_set.filter(user=user) | match.guest_team.player_set.filter(user=user)
-    if player.count() == 0:
-        return HttpResponseNotFound()  # TODO: Not sure if get_or_404 works with quryse unions so I left this
+
+    if current_match.inviting_team != current_team and current_match.guest_team != current_team:
+        return HttpResponseNotFound()
+
+    my_score_proposition = current_match.my_score_proposition(current_team)
+    opponent_score_proposition = current_match.opponent_score_proposition(current_team)
+    expired = current_match.expires_at < datetime.now(timezone.utc).date()
+
+    scored = current_match.guest_score is not None and current_match.inviting_score is not None
+    won = not expired and scored and current_match.my_score(current_team) > current_match.opponent_score(current_team)
     context = {
-        'match': match
+        'match': current_match,
+        'opponent': current_match.other_team(current_team),
+        'expired': expired,
+        'scored': scored,
+        'won': won,
+        'my_score_proposition': my_score_proposition,
+        'opponent_score_proposition': opponent_score_proposition,
     }
     return render(request, 'liga/match.html', context)
 
@@ -346,8 +365,47 @@ def accept_team_request(request, tournament_id):
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
 
+
+def create_match(request, tournament_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    current_player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+    current_team = current_player.team
+    if current_team is None:
+        return HttpResponseNotFound()
+
+    form = CreateMatchForm(request.POST)
+    if form.is_valid():
+        if form.cleaned_data['inviting_team_id_hidden_field'] != current_team.id:
+            return HttpResponseNotFound()
+
+        form_opponent = get_object_or_404(current_team.possible_oponenets,
+                                          id=form.cleaned_data['guest_team_id_hidden_field'],
+                                          tournament_id=tournament_id)
+
+        current_match, created = Match.objects.get_or_create(
+            inviting_team_id=current_team.id,
+            guest_team_id=form_opponent.id,
+            created_at=date.today(),
+            suggested_at=form.cleaned_data['suggested_at'],
+            expires_at=form.cleaned_data['expires_at'],
+        )
+        if not created:
+            # match already existed TODO: Notify user
+            return HttpResponseNotFound()
+
+        print('CREATED:', current_match)
+        return redirect('tournament', tournament_id=tournament_id)
+
+    else:
+        # invalid form TODO: Render errors
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('tournament', tournament_id=tournament_id)
+
 # TODO actions (handling POST request):
 # log in
 # log out (user)
-# create match (tournament, team, opponent team, user)
 # create score proposition (tournament, match, user)

@@ -2,6 +2,8 @@ from datetime import datetime, date, timezone
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+
 
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
@@ -9,6 +11,9 @@ from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Play
 
 # Create your views here.
 
+@login_required
+def home(request):
+    return render(request, 'liga/home.html')
 
 # noinspection SpellCheckingInspection
 def index(request):

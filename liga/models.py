@@ -213,7 +213,6 @@ class Match(models.Model):
             self.inviting_score = gh
             self.guest_score = gg
 
-
         self.save()
 
         self.inviting_team.update_score()

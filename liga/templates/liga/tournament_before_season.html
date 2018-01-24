@@ -65,9 +65,15 @@
 
         <h3>Invites to team</h3>
         <ul>
-            {% for team in player_invites %}
-                {# TODO: Form to accept or decline the invite #}
-                <li>{{ team.name }}</li>
+            {% for f in player_invite_forms %}
+                <li>
+                    {{ f.player_name }}
+                </li>
+                <form action="{% url 'accept-player-invite' tournament_id=tournament.id %}" method="post">
+                    {% csrf_token %}
+                    {{ f }}
+                    <input type="submit" value="Accept invitation"/>
+                </form>
             {% endfor %}
         </ul>
 

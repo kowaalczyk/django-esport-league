@@ -43,7 +43,7 @@ class CreatePlayerInviteForm(forms.Form):
     )
 
     def set_data(self, team, player):
-        self.player_name = player.user.name
+        self.player_name = player.user.name  # TODO full_name
         self.fields['hidden_player_id_field'].initial = player.id
         self.fields['hidden_team_id_field'].initial = team.id
         return self
@@ -68,20 +68,21 @@ class CreateTeamRequestForm(forms.Form):
         self.fields['hidden_team_id_field'].initial = team.id
         return self
 
-# # https://docs.djangoproject.com/en/2.0/ref/forms/api/#dynamic-initial-values
-# class ManagePlayerInviteForm(forms.Form):
-#     accept_invite_field = forms.TypedChoiceField(
-#         empty_value=False,
-#         label='DATA NOT SET !!!',
-#         coerce=lambda x: x == 'True',
-#         choices=((False, 'No'), (True, 'Yes')),
-#         widget=forms.RadioSelect
-#     )
-#
-#     def set_data(self, team_name):
-#         self.accept_invite_field.label = "Do You want to join {}?".format(team_name)
-#
-#
+
+class AcceptPlayerInviteForm(forms.Form):
+    player_name = ''
+
+    hidden_invite_id_field = forms.IntegerField(
+        label="Pretend you've never seen this ;)",
+        widget=forms.HiddenInput,
+    )
+
+    def set_data(self, invite, player):
+        self.player_name = player.user.name  # TODO full_name
+        self.fields['hidden_invite_id_field'].initial = invite.id
+        return self
+
+
 # class ManageTeamRequestForm(forms.Form):
 #     accept_request_field = forms.TypedChoiceField(
 #         empty_value=False,

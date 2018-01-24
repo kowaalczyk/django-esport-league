@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
-    AcceptPlayerInviteForm, AcceptTeamRequestForm
+    AcceptPlayerInviteForm, AcceptTeamRequestForm, CreateMatchForm, CreateScorePropositionForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 from liga import helpers
 
@@ -15,7 +15,6 @@ from liga import helpers
 @login_required
 def home(request):
     return render(request, 'liga/home.html')
-
 
 # noinspection SpellCheckingInspection
 @login_required
@@ -29,11 +28,13 @@ def index(request):
     user = User.objects.get(facebook_id=fid)
 
     playable_tournaments = user.playable_tournaments.all()
+    planned_tournaments = user.planned_tournaments.all()
     joinable_tournaments = user.joinable_tournaments.all()
     joinable_tournament_forms = [JoinTournamentForm().set_data(t) for t in joinable_tournaments]
 
     context = {
         'playable_tournaments': playable_tournaments,
+        'planned tournaments': planned_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
     }
     return render(request, 'liga/index.html', context)
@@ -59,11 +60,13 @@ def tournament(request, tournament_id):
 
             free_players = current_tournament.players.filter(team__isnull=True).all()
             free_player_forms = [CreatePlayerInviteForm().set_data(player.team, fp) for fp in free_players]
+
+            team_members = player.team.players.exclude(id=player.id).all()
             context = {
                 'tournament': current_tournament,
                 'has_team': has_team,
                 'team': player.team,
-                'team_players': player.team.players.all(),
+                'team_players': team_members,
                 'team_players_count': player.team.players.count(),
                 'team_request_accept_forms': team_request_forms,
                 'free_players_invite_forms': free_player_forms,
@@ -88,7 +91,7 @@ def tournament(request, tournament_id):
 
     else:
         # during season
-        teams = current_tournament.teams.all()  # TODO: .order_by(score)
+        teams = current_tournament.teams.order_by('-score').all()
         context = {
             'tournament': current_tournament,
             'has_team': has_team,
@@ -105,7 +108,7 @@ def team(request, tournament_id, team_id):
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     current_team = get_object_or_404(Team, id=team_id, tournament_id=tournament_id)
-    player = get_object_or_404(Player, user_id=user_id, team_id=team_id)
+    player = get_object_or_404(Player, team=current_team, user=user)
 
     season_ended = current_tournament.season_end < datetime.now(timezone.utc)
     if season_ended:
@@ -113,17 +116,22 @@ def team(request, tournament_id, team_id):
 
     else:
         possible_opponents = current_team.possible_oponenets.all()
-        played_matches = current_team.matches.order_by()
+        possible_opponent_challenge_forms = [CreateMatchForm().set_data(current_team, opt)
+                                             for opt in possible_opponents]
 
-        pending_matches = None
-        played_matches = None
-        possible_opponents = None
+        planned_matches = current_team.planned_matches.all()
+        played_matches = current_team.played_matches.order_by('-expires_at').all()
 
+        print(possible_opponents.count())
+        team_members = current_team.players.exclude(id=player.id).all()
         context = {
-            'team_members': current_team.players,
-            'pending_matches': pending_matches,
-            'match_history': played_matches,
-            'possible_opponents': possible_opponents
+            'team': current_team,
+            'tournament': current_tournament,
+            'team_members': team_members,
+            'planned_matches': planned_matches,
+            'played_matches': played_matches,
+            'possible_opponents_count': possible_opponents.count(),
+            'possible_opponent_challenge_forms': possible_opponent_challenge_forms,
         }
         return render(request, 'liga/team.html', context)
 
@@ -137,13 +145,34 @@ def match(request, tournament_id, match_id):
     current_match = get_object_or_404(Match, id=match_id)
     player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
     current_team = player.team
+
     if current_team is None:
         return HttpResponseNotFound()
-    player = match.inviting_team.player_set.filter(user=user) | match.guest_team.player_set.filter(user=user)
-    if player.count() == 0:
-        return HttpResponseNotFound()  # TODO: Not sure if get_or_404 works with quryse unions so I left this
+
+    if current_match.inviting_team != current_team and current_match.guest_team != current_team:
+        return HttpResponseNotFound()
+
+    expired = current_match.expires_at < datetime.now(timezone.utc).date()
+    scored = current_match.guest_score is not None and current_match.inviting_score is not None
+    won = not expired and scored and current_match.my_score(current_team) > current_match.opponent_score(current_team)
+
+    opponent_score_proposition = current_match.opponent_score_proposition(current_team)
+    my_score_proposition = current_match.my_score_proposition(current_team)
+    if my_score_proposition is None and not expired:
+        my_score_proposition_form = CreateScorePropositionForm().set_data(current_team, current_match)
+    else:
+        my_score_proposition_form = None
+
     context = {
-        'match': match
+        'tournament': current_tournament,
+        'match': current_match,
+        'opponent': current_match.other_team(current_team),
+        'expired': expired,
+        'scored': scored,
+        'won': won,
+        'my_score_proposition': my_score_proposition,
+        'my_score_proposition_form': my_score_proposition_form,
+        'opponent_score_proposition': opponent_score_proposition,
     }
     return render(request, 'liga/match.html', context)
 
@@ -354,8 +383,84 @@ def accept_team_request(request, tournament_id):
         print(form.errors)
         return redirect('tournament', tournament_id=tournament_id)
 
+
+def create_match(request, tournament_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    current_player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+    current_team = current_player.team
+    if current_team is None:
+        return HttpResponseNotFound()
+
+    form = CreateMatchForm(request.POST)
+    if form.is_valid():
+        if form.cleaned_data['inviting_team_id_hidden_field'] != current_team.id:
+            return HttpResponseNotFound()
+
+        form_opponent = get_object_or_404(current_team.possible_oponenets,
+                                          id=form.cleaned_data['guest_team_id_hidden_field'],
+                                          tournament_id=tournament_id)
+
+        current_match, created = Match.objects.get_or_create(
+            inviting_team_id=current_team.id,
+            guest_team_id=form_opponent.id,
+            created_at=date.today(),
+            suggested_at=form.cleaned_data['suggested_at'],
+            expires_at=form.cleaned_data['expires_at'],
+        )
+        if not created:
+            # match already existed TODO: Notify user
+            return HttpResponseNotFound()
+
+        print('CREATED:', current_match)
+        return redirect('team', tournament_id=tournament_id, team_id=current_team.id)
+
+    else:
+        # invalid form TODO: Render errors
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('team', tournament_id=tournament_id, team_id=current_team.id)
+
+
+def create_score_proposition(request, tournament_id, match_id):
+    user_id = 1  # TODO: get from session
+    if request.method != 'POST':
+        return HttpResponseNotFound()
+
+    current_player = get_object_or_404(Player, tournament_id=tournament_id, user_id=user_id)
+    current_team = current_player.team
+    if current_team is None:
+        return HttpResponseNotFound()
+
+    current_match = get_object_or_404(Match,
+                                      id=match_id,
+                                      inviting_team__tournament_id=tournament_id,
+                                      guest_team__tournament_id=tournament_id)
+    if current_team != current_match.inviting_team and current_team != current_match.guest_team:
+        return HttpResponseNotFound()
+
+    form = CreateScorePropositionForm(request.POST)
+    if form.is_valid():
+        updated = current_match.update_proposition(current_team,
+                                                   form.cleaned_data['my_score'],
+                                                   form.cleaned_data['opponent_score'])
+        if updated:
+            print('UPDATE score_proposition:', current_match)
+            return redirect('match', tournament_id=tournament_id, match_id=match_id)
+
+        else:
+            print('WARNING: match score propositions not updated!')
+            # TODO: Render errors
+            return redirect('match', tournament_id=tournament_id, match_id=match_id)
+
+    else:
+        # invalid form TODO: Render errors
+        print('ERROR: form error')
+        print(form.errors)
+        return redirect('match', tournament_id=tournament_id, match_id=match_id)
+
 # TODO actions (handling POST request):
 # log in
 # log out (user)
-# create match (tournament, team, opponent team, user)
-# create score proposition (tournament, match, user)

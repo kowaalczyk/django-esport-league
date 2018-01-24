@@ -1,21 +1,83 @@
-TODO
+{% extends "liga/base.html" %}
+{% block content %}
 
-<h3>
-    {{ team.name }}
-    {% if team.is_public %}
-        <span class="text-muted">  (public)</span>
+    <h1>{{ tournament.game_name }}</h1>
+
+    <p>
+        The tournament started at {{ tournament.season_start|date:'Y-m-d H:i' }}
+        and will end at {{ tournament.season_end|date:'Y-m-d H:i' }}
+    </p>
+
+    <h2>Your team: {{ team.name }}</h2>
+    <p>
+        Score: {{ team.score }}
+        <br>
+        Position in tournament: {{ team.ranking }}
+        <br>
+    </p>
+
+    {% if team_members.count > 0 %}
+        <h3>Your teammates</h3>
+        <ul>
+            {% for p in team_members %}
+                <li>{{ p.user.full_name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your are playing all on your own!</p>
     {% endif %}
-</h3>
 
-<p>
-    The tournament ends at
-    Place: {# TODO #} <br>
-    Score: {# TODO #}
-</p>
+    {% if planned_matches.count > 0 %}
+        <h3>Matches to play</h3>
+        {% if team.score == 0 %}
+            Play matches to score points. <br>
+        {% endif %}
 
-<h5>Your teammates</h5>
-<ul>
-    {% for p in team.players %}
-        <li>{{ p.user.name }}</li>
-    {% endfor %}
-</ul>
+        <ul>
+            {% for m in planned_matches %}
+                <li>
+                    <a href="{% url 'match' tournament_id=tournament.id match_id=m.id %}">
+                        {{ m.inviting_team.name }} vs {{ m.guest_team.name }}
+                        - suggested to play {{ m.suggested_at|date:'Y-m-d' }}, expires {{ m.expires_at|date:'Y-m-d' }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if possible_opponents_count > 0 %}
+        <h3>Possible opponents</h3>
+        {% if team.score == 0 %}
+            Challenge team to a match to score points. <br>
+        {% endif %}
+        <ul>
+            {% for f in possible_opponent_challenge_forms %}
+                <li>
+                    {{ f.opponent_name }}
+                    <form action="{% url 'create-match' tournament_id=tournament.id %}" method="post">
+                        {% csrf_token %}
+                        {{ f }}
+                        <input type="submit" value="Challenge"/>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h3>Played matches</h3>
+    {% if played_matches.count > 0 %}
+        <ul>
+            {% for m in played_matches %}
+                <li>
+                    <a href="{% url 'match' tournament_id=tournament.id match_id=m.id %}">
+                        {{ m.inviting_team.name }} vs {{ m.guest_team.name }}
+                    </a>
+                    ({{ m.inviting_score }} : {{ m.guest_score }} )
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your match history will appear here.</p>
+    {% endif %}
+
+{% endblock %}

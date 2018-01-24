@@ -28,9 +28,15 @@
 
         <h3>Team requests</h3>
         <ul>
-            {% for p in free_players %}
-                {# TODO: Form to accept or decline the request #}
-                <li>{{ p.user.name }}</li>
+            {% for f in team_request_accept_forms %}
+                <li>
+                    {{ f.player_name }}
+                    <form action="{% url 'accept-team-request' tournament_id=tournament.id %}" method="post">
+                        {% csrf_token %}
+                        {{ f }}
+                        <input type="submit" value="Add to team"/>
+                    </form>
+                </li>
             {% endfor %}
         </ul>
 
@@ -65,9 +71,15 @@
 
         <h3>Invites to team</h3>
         <ul>
-            {% for team in player_invites %}
-                {# TODO: Form to accept or decline the invite #}
-                <li>{{ team.name }}</li>
+            {% for f in player_invite_forms %}
+                <li>
+                    {{ f.team_name }}
+                </li>
+                <form action="{% url 'accept-player-invite' tournament_id=tournament.id %}" method="post">
+                    {% csrf_token %}
+                    {{ f }}
+                    <input type="submit" value="Accept invitation"/>
+                </form>
             {% endfor %}
         </ul>
 

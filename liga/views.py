@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
     AcceptPlayerInviteForm, AcceptTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
-
+from liga import helpers
 
 # Create your views here.
 
@@ -16,15 +16,18 @@ from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Play
 def home(request):
     return render(request, 'liga/home.html')
 
-
 # noinspection SpellCheckingInspection
 @login_required
 def index(request):
-    user_id = 1  # TODO: require sign in user
-    user = User.objects.get(id=user_id)
+    us = request.user.social_auth.filter(provider='facebook')[0]
+    user_id = us.uid
+
+    if not User.objects.filter(facebook_id=user_id):
+        helpers.fill_user_info(us)
+
+    user = User.objects.get(facebook_id=user_id)
 
     playable_tournaments = user.playable_tournaments.all()
-    # planned_tournaments = user.planned_tournaments.all() TODO
     joinable_tournaments = user.joinable_tournaments.all()
     joinable_tournament_forms = [JoinTournamentForm().set_data(t) for t in joinable_tournaments]
 

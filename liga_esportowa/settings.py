@@ -25,7 +25,8 @@ SECRET_KEY = 'lwq!k6%2kjck)z_f792_bb7bg&#v_db(hx0fwnec=oxg%yz+dm'
 DEBUG = True
 
 ALLOWED_HOSTS = ['dcd6dcb0.ngrok.io',
-                 'localhost'
+                 'localhost',
+                 '127.0.0.1',
                  ]
 
 # Application definition
@@ -133,7 +134,13 @@ STATIC_URL = '/static/'
 # TODO: move to specific app settings
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'index'
 
 SOCIAL_AUTH_FACEBOOK_KEY = '810296622491345'  # App ID
 SOCIAL_AUTH_FACEBOOK_SECRET = 'bc13144bff6dd5a7e6777f427c370f6f'  # App Secret
+
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id,name,email',
+}

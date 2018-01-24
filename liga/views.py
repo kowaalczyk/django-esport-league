@@ -16,6 +16,7 @@ from liga import helpers
 def home(request):
     return render(request, 'liga/home.html')
 
+
 # noinspection SpellCheckingInspection
 @login_required
 def index(request):

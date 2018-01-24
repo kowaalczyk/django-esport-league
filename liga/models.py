@@ -93,6 +93,7 @@ class Team(models.Model):
     def update_score(self):
         self.score = self.inviting_matches.aggregate(sum=Coalesce(Sum('inviting_score'), 0))['sum'] + \
                      self.guest_matches.aggregate(sum=Coalesce(Sum('guest_score'), 0))['sum']
+        self.save()
 
     def __str__(self):
         return self.name
@@ -211,6 +212,9 @@ class Match(models.Model):
         if gg == hg and gh == hh:  # checking if propositions matching
             self.inviting_score = gh
             self.guest_score = gg
+
+
+        self.save()
 
         self.inviting_team.update_score()
         self.guest_team.update_score()

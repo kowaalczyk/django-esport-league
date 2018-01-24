@@ -4,11 +4,11 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
-
 from liga.forms import JoinTournamentForm, CreateTeamForm, CreatePlayerInviteForm, CreateTeamRequestForm, \
     AcceptPlayerInviteForm, AcceptTeamRequestForm
 from liga.models import Tournament, Team, TeamRequest, PlayerInvite, Match, Player, User
 from liga import helpers
+
 
 # Create your views here.
 
@@ -16,16 +16,17 @@ from liga import helpers
 def home(request):
     return render(request, 'liga/home.html')
 
+
 # noinspection SpellCheckingInspection
 @login_required
 def index(request):
     us = request.user.social_auth.filter(provider='facebook')[0]
-    user_id = us.uid
+    fid = us.uid
 
-    if not User.objects.filter(facebook_id=user_id):
+    if not User.objects.filter(facebook_id=fid):
         helpers.fill_user_info(us)
 
-    user = User.objects.get(facebook_id=user_id)
+    user = User.objects.get(facebook_id=fid)
 
     playable_tournaments = user.playable_tournaments.all()
     joinable_tournaments = user.joinable_tournaments.all()
@@ -40,8 +41,8 @@ def index(request):
 
 @login_required
 def tournament(request, tournament_id):
-    user_id = 1  # TODO: require sign in user
-    # user = request.user
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     print(current_tournament)
@@ -99,8 +100,8 @@ def tournament(request, tournament_id):
 
 @login_required
 def team(request, tournament_id, team_id):
-    user_id = 1  # TODO: require sign in user
-    user = User.objects.get(id=user_id)
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     current_team = get_object_or_404(Team, id=team_id, tournament_id=tournament_id)
@@ -129,7 +130,8 @@ def team(request, tournament_id, team_id):
 
 @login_required
 def match(request, tournament_id, match_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
 
     current_tournament = get_object_or_404(Tournament, id=tournament_id)
     current_match = get_object_or_404(Match, id=match_id)
@@ -148,7 +150,9 @@ def match(request, tournament_id, match_id):
 
 @login_required
 def create_player(request):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 
@@ -173,7 +177,9 @@ def create_player(request):
 
 @login_required
 def create_team(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 
@@ -205,7 +211,9 @@ def create_team(request, tournament_id):
 
 @login_required
 def create_player_invite(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 
@@ -250,7 +258,9 @@ def create_player_invite(request, tournament_id):
 
 @login_required
 def create_team_requst(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 
@@ -286,7 +296,9 @@ def create_team_requst(request, tournament_id):
 
 @login_required
 def accept_player_invite(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 
@@ -314,7 +326,9 @@ def accept_player_invite(request, tournament_id):
 
 
 def accept_team_request(request, tournament_id):
-    user_id = 1  # TODO: get from session
+    fid = request.user.social_auth.filter(provider='facebook')[0].uid
+    user_id = User.objects.get(facebook_id=fid)
+
     if request.method != 'POST':
         return HttpResponseNotFound()
 

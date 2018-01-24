@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "liga/base.html" %}
 {% block content %}
 
     <h1>{{ tournament.game_name }}</h1>
@@ -29,8 +29,8 @@
                         team profile
                     </a>
                 {% endif %}
-                {# TODO: Option to challenge team for a match if it is playable #}
-                {# TODO: Team score #}
+                {# TODO: Make sure score works + opt to challenge team for a match if playable #}
+                total score: {{ t.total_score }} points
             </li>
         {% endfor %}
     </ol>

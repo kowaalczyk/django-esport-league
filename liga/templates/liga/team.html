@@ -1,0 +1,21 @@
+TODO
+
+<h3>
+    {{ team.name }}
+    {% if team.is_public %}
+        <span class="text-muted">  (public)</span>
+    {% endif %}
+</h3>
+
+<p>
+    The tournament ends at
+    Place: {# TODO #} <br>
+    Score: {# TODO #}
+</p>
+
+<h5>Your teammates</h5>
+<ul>
+    {% for p in team.players %}
+        <li>{{ p.user.name }}</li>
+    {% endfor %}
+</ul>

@@ -24,12 +24,13 @@ def index(request):
     user = User.objects.get(id=user_id)
 
     playable_tournaments = user.playable_tournaments.all()
-    # TODO planned_tournaments = user.planned_tournaments.all()
+    # planned_tournaments = user.planned_tournaments.all() TODO
     joinable_tournaments = user.joinable_tournaments.all()
     joinable_tournament_forms = [JoinTournamentForm().set_data(t) for t in joinable_tournaments]
 
     context = {
         'playable_tournaments': playable_tournaments,
+        # 'planned tournaments': planned_tournaments,
         'joinable_tournament_forms': joinable_tournament_forms,
     }
     return render(request, 'liga/index.html', context)

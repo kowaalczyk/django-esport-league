@@ -13,6 +13,18 @@
         {% endfor %}
     </ul>
 
+    {# Tournaments that will start soon #}
+    <h1>Planned tournaments</h1>
+    <ul>
+        {% for t in planned_tournaments %}
+            <li>
+                <a href="{% url 'tournament' tournament_id=t.id %}">
+                    {{ t.game_name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
     {# Join tournament forms #}
     <h1>Join other tournaments</h1>
     {% for f in joinable_tournament_forms %}

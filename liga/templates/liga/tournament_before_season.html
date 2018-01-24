@@ -43,81 +43,153 @@
                     </h5>
                 </li>
                 {% for f in team_request_accept_forms %}
-                    <li class="collection-item">{{ p.user.full_name }}</li>
+                    <li class="collection-item">
+                        <div>
+                            {{ f.player_name }}
+                            <form action="{% url 'accept-team-request' tournament_id=tournament.id %}"
+                                  name="accept_team_request_{{ forloop.counter0 }}"
+                                  method="post"
+                                  style="display: inline;">
+                                {% csrf_token %}
+                                {{ f }}
+                                <a class="secondary-content"
+                                   onclick="accept_team_request_{{ forloop.counter0 }}.submit();"
+                                   href="#!">
+                                    Add to team
+                                </a>
+                            </form>
+                        </div>
+                    </li>
                 {% endfor %}
             </ul>
 
             {# TODO: Dont display if team is already full #}
             {# FREE PLAYERS #}
+            <ul class="collection with-header">
+                <li class="collection-header">
+                    <h5>
+                        Free players
+                    </h5>
+                </li>
+                {% for f in free_players_invite_forms %}
+                    <li class="collection-item">
+                        <div>
+                            {{ f.player_name }}
+
+                            <form action="{% url 'create-player-invite' tournament_id=tournament.id %}"
+                                  name="create_player_invite_{{ forloop.counter0 }}"
+                                  method="post"
+                                  style="display: inline;">
+                                {% csrf_token %}
+                                {{ f }}
+                                <a class="secondary-content"
+                                   onclick="create_player_invite_{{ forloop.counter0 }}.submit();"
+                                   href="#!">
+                                    Invite to team
+                                </a>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
 
-        <h3>Team requests</h3>
-        <ul>
-            {% for f in team_request_accept_forms %}
-                <li>
-                    {{ f.player_name }}
-                    <form action="{% url 'accept-team-request' tournament_id=tournament.id %}" method="post">
-                        {% csrf_token %}
-                        {{ f }}
-                        <input type="submit" value="Add to team"/>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-
-        <h3>Free players</h3>
-        <ul>
-            {% for f in free_players_invite_forms %}
-                <li>
-                    {{ f.player_name }}
-                    <form action="{% url 'create-player-invite' tournament_id=tournament.id %}" method="post">
-                        {% csrf_token %}
-                        {{ f }}
-                        <input type="submit" value="Invite to team"/>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-
     {% else %}
-        <p class="flow-text">
+        <p>
             You are currently not a member of any team.
             Join the team or create a new one to be able to take part in the tournament.
         </p>
 
+        {# CREATE TEAM FORM #}
         <h3>Create team</h3>
-        <div>
-            <form action="{% url 'create-team' tournament_id=tournament.id %}" method="post">
+        <div class="card-panel">
+            <form class=""
+                  action="{% url 'create-team' tournament_id=tournament.id %}"
+                  method="post">
                 {% csrf_token %}
-                {{ create_team_form }}
-                <input type="submit" value="Create"/>
+                {{ create_team_form.non_field_errors }}
+
+                {# TEAM NAME FIELD #}
+                <div class="input-field">
+                    {{ create_team_form.team_name.errors }}
+                    <label for="{{ create_team_form.team_name.id_for_label }}">Team name</label>
+                    {{ create_team_form.team_name }}
+                </div>
+                <div class="row valign-wrapper">
+                    <div class="col s4 m3 more-space">
+                        {# TEAM PUBLIC FIELD #}
+                        <div class="switch">
+                            {{ create_team_form.is_public.errors }}
+                            <label for="{{ create_team_form.is_public.id_for_label }}">
+                                {{ create_team_form.is_public }}
+                                <span>Public</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col s8 m9 more-space">
+                        {# Hidden field #}
+                        {{ create_team_form.hidden_tournament_id_field }}
+                        {# TEAM SUBMIT FIELD #}
+                        <button class="btn waves-effect waves-light" type="submit" name="action" value="Submit">
+                            Create team <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
-        <h3>Invites to team</h3>
-        <ul>
+        {# PLAYER INVITATION FORMS #}
+        <ul class="collection with-header">
+            <li class="collection-header">
+                <h3>
+                    Team invitations
+                </h3>
+            </li>
             {% for f in player_invite_forms %}
-                <li>
-                    {{ f.team_name }}
+                <li class="collection-item">
+                    <div>
+                        {{ f.team_name }}
+                        <form action="{% url 'accept-player-invite' tournament_id=tournament.id %}"
+                              name="accept_player_invite_{{ forloop.counter0 }}"
+                              method="post"
+                              style="display: inline;">
+                            {% csrf_token %}
+                            {{ f }}
+                            <a class="secondary-content"
+                               onclick="accept_player_invite_{{ forloop.counter0 }}.submit();"
+                               href="#!">
+                                Accept invitation
+                            </a>
+                        </form>
+                    </div>
                 </li>
-                <form action="{% url 'accept-player-invite' tournament_id=tournament.id %}" method="post">
-                    {% csrf_token %}
-                    {{ f }}
-                    <input type="submit" value="Accept invitation"/>
-                </form>
             {% endfor %}
         </ul>
 
-        <h3>Public teams</h3>
-        <ul>
+        {# PUBLIC TEAM SEND REQUEST FORMS #}
+        <ul class="collection with-header">
+            <li class="collection-header">
+                <h3>
+                    Public teams
+                </h3>
+            </li>
             {% for f in public_teams_request_forms %}
-                <li>
-                    {{ f.team_name }}
-                    <form action="{% url 'create-team-request' tournament_id=tournament.id %}" method="post">
-                        {% csrf_token %}
-                        {{ f }}
-                        <input type="submit" value="Request to join"/>
-                    </form>
+                <li class="collection-item">
+                    <div>
+                        {{ f.team_name }}
+                        <form action="{% url 'create-team-request' tournament_id=tournament.id %}"
+                              name="create_team_request_{{ forloop.counter0 }}"
+                              method="post"
+                              style="display: inline;">
+                            {% csrf_token %}
+                            {{ f }}
+                            <a class="secondary-content"
+                               onclick="create_team_request_{{ forloop.counter0 }}.submit();"
+                               href="#!">
+                                Request to join
+                            </a>
+                        </form>
+                    </div>
                 </li>
             {% endfor %}
         </ul>

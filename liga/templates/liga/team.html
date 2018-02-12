@@ -16,7 +16,7 @@
                     Score: {{ team.score }} <br>
                     Position in the tournament: {{ team.ranking }} <br>
                 </p>
-            {% if team_members.count > 0 %}
+            {% if team_members %}
                 <p>Your teammates:</p>
                 <ul>
                     {% for p in team_members %}
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    {% if planned_matches.count > 0 %}
+    {% if planned_matches %}
         <h3>Matches to play</h3>
         {% if team.score == 0 %}
             Play matches to score points. <br>
@@ -68,7 +68,7 @@
     {% endif %}
 
     <h3>Played matches</h3>
-    {% if played_matches.count > 0 %}
+    {% if played_matches %}
         <ul>
             {% for m in played_matches %}
                 <li>

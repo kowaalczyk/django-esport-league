@@ -23,6 +23,7 @@
             </blockquote> {# TODO: Change if team is already full #}
 
             {# TEAMMATES #}
+            {% if team_players %}
             <ul class="collection with-header">
                 <li class="collection-header">
                     <h5>
@@ -33,68 +34,72 @@
                     <li class="collection-item">{{ p.user.full_name }}</li>
                 {% endfor %}
             </ul>
+            {% endif %}
 
             {# TEAM REQUESTS#}
-            {# TODO: Dont display if team is already full #}
-            <ul class="collection with-header">
-                <li class="collection-header">
-                    <h5>
-                        Team requests
-                    </h5>
-                </li>
-                {% for f in team_request_accept_forms %}
-                    <li class="collection-item">
-                        <div>
-                            {{ f.player_name }}
-                            <form action="{% url 'accept-team-request' tournament_id=tournament.id %}"
-                                  name="accept_team_request_{{ forloop.counter0 }}"
-                                  method="post"
-                                  style="display: inline;">
-                                {% csrf_token %}
-                                {{ f }}
-                                <a class="secondary-content"
-                                   onclick="accept_team_request_{{ forloop.counter0 }}.submit();"
-                                   href="#!">
-                                    Add to team
-                                </a>
-                            </form>
-                        </div>
+            {% if team_request_accept_forms and team_players_count < tournament.team_size %}
+                <ul class="collection with-header">
+                    <li class="collection-header">
+                        <h5>
+                            Team requests
+                        </h5>
                     </li>
-                {% endfor %}
-            </ul>
+                    {% for f in team_request_accept_forms %}
+                        <li class="collection-item">
+                            <div>
+                                {{ f.player_name }}
+                                <form action="{% url 'accept-team-request' tournament_id=tournament.id %}"
+                                      name="accept_team_request_{{ forloop.counter0 }}"
+                                      method="post"
+                                      style="display: inline;">
+                                    {% csrf_token %}
+                                    {{ f }}
+                                    <a class="secondary-content"
+                                       onclick="accept_team_request_{{ forloop.counter0 }}.submit();"
+                                       href="#!">
+                                        Add to team
+                                    </a>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
 
-            {# TODO: Dont display if team is already full #}
             {# FREE PLAYERS #}
-            <ul class="collection with-header">
-                <li class="collection-header">
-                    <h5>
-                        Free players
-                    </h5>
-                </li>
-                {% for f in free_players_invite_forms %}
-                    <li class="collection-item">
-                        <div>
-                            {{ f.player_name }}
-
-                            <form action="{% url 'create-player-invite' tournament_id=tournament.id %}"
-                                  name="create_player_invite_{{ forloop.counter0 }}"
-                                  method="post"
-                                  style="display: inline;">
-                                {% csrf_token %}
-                                {{ f }}
-                                <a class="secondary-content"
-                                   onclick="create_player_invite_{{ forloop.counter0 }}.submit();"
-                                   href="#!">
-                                    Invite to team
-                                </a>
-                            </form>
-                        </div>
+            {% if free_players_invite_forms and team_players_count < tournament.team_size %}
+                <ul class="collection with-header">
+                    <li class="collection-header">
+                        <h5>
+                            Free players
+                        </h5>
                     </li>
-                {% endfor %}
-            </ul>
+                    {% for f in free_players_invite_forms %}
+                        <li class="collection-item">
+                            <div>
+                                {{ f.player_name }}
+
+                                <form action="{% url 'create-player-invite' tournament_id=tournament.id %}"
+                                      name="create_player_invite_{{ forloop.counter0 }}"
+                                      method="post"
+                                      style="display: inline;">
+                                    {% csrf_token %}
+                                    {{ f }}
+                                    <a class="secondary-content"
+                                       onclick="create_player_invite_{{ forloop.counter0 }}.submit();"
+                                       href="#!">
+                                        Invite to team
+                                    </a>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
 
     {% else %}
+    {# PLAYER WITHOUT TEAM #}
         <p>
             You are currently not a member of any team.
             Join the team or create a new one to be able to take part in the tournament.
@@ -164,6 +169,11 @@
                     </div>
                 </li>
             {% endfor %}
+            {% if not player_invite_forms %}
+                <li class="collection-item">
+                    You haven't received any invitations yet.
+                </li>
+            {% endif %}
         </ul>
 
         {# PUBLIC TEAM SEND REQUEST FORMS #}
@@ -192,6 +202,9 @@
                     </div>
                 </li>
             {% endfor %}
+            {% if not public_teams_request_forms %}
+                <li class="collection-item">There are no public teams currently available, sorry.</li>
+            {% endif %}
         </ul>
     {% endif %}
 

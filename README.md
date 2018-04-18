@@ -4,8 +4,6 @@
 
 This project aims to create a system for managing sport and e-sport leagues. Having been developed as a univeristy course assignemnt, it is not intended for commercial use.  
 
-![screenshots](https://i.imgur.com/CtGjuHt.png)
-
 ## Features  
 Application allows users to log in or register via Facebook. Registered users can join an existing tournament or create a new one. User becomes a player after joining a tournament. Each tournament represents one game. Before the tournament games begin, the tournament is in team forming period. During this period, players without a team can request joining a public team (that is, a team that is publicly visible), or accept a team invitation from any team, if they received one. In team forming period, players without a team can create a team, they are then automatically assignet to that team. Players that already have a team in this period can invite others to join their team, or accept a team join request from other players if team is public. After team forming phase is finished, the players can no longer change, create or remove their teams.  
   

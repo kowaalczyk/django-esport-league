@@ -36,6 +36,40 @@
             Play matches to score points. <br>
         {% endif %}
 
+
+        <table class="highlight">
+            <thead>
+                <tr>
+                    <th>Opponent</th>
+                    <th>Suggested match date</th>
+                    <th>Challenge deadline</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in planned_matches %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'match' tournament_id=tournament.id match_id=m.id %}">
+                                {% if m.inviting_team.name == team.name %}
+                                    {{ m.guest_team.name }}
+                                {% else %}
+                                    {{ m.inviting_team.name }}
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td>
+                            {{ m.suggested_at|date:'Y-m-d' }}
+                        </td>
+                        <td>
+                            {{ m.expires_at|date:'Y-m-d' }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+
+
         <ul>
             {% for m in planned_matches %}
                 <li>
@@ -53,18 +87,43 @@
         {% if team.score == 0 %}
             Challenge team to a match to score points. <br>
         {% endif %}
-        <ul>
-            {% for f in possible_opponent_challenge_forms %}
-                <li>
-                    {{ f.opponent_name }}
-                    <form action="{% url 'create-match' tournament_id=tournament.id %}" method="post">
-                        {% csrf_token %}
-                        {{ f }}
-                        <input type="submit" value="Challenge"/>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
+        {% for f in possible_opponent_challenge_forms %}
+            <div class="card-panel">
+                <h4>{{ f.opponent_name }}</h4>
+                <form class=""
+                      action="{% url 'create-match' tournament_id=tournament.id %}"
+                      method="post">
+                    {% csrf_token %}
+                    {{ f.non_field_errors }}
+
+                    {# Visible fields, TODO: materialize datepicker #}
+                    <div class="input-field inline">
+                        {{ f.expires_at.errors }}
+                        <label for="{{ f.expires_at.id_for_label }}">
+                            Expire date
+                        </label>
+                        {{ f.expires_at }}
+                    </div>
+                    <div class="input-field inline">
+                        {{ f.suggested_at.errors }}
+                        <label for="{{ f.suggested_at.id_for_label }}">
+                            Suggested playing time
+                        </label>
+                        {{ f.suggested_at }}
+                    </div>
+
+                    {# Hidden fields #}
+                    {{ f.inviting_team_id_hidden_field }}
+                    {{ f.guest_team_id_hidden_field }}
+                    <button class="btn waves-effect waves-light red"
+                            type="submit"
+                            name="action"
+                            value="Challenge">
+                        Challenge
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
     {% endif %}
 
     <h3>Played matches</h3>

@@ -1,42 +1,28 @@
 # Uniwersytecka liga e-sportowa
 
-# Vision Doc
+# Project vision
 
-Projekt ma na celu stworzenie systemu do obsługi turniejów e-sportowych. Gracze rejerstrują się przez Facebooka, następnie mogą dołączać do turniejów w konkretnych konkurencjach(grach). Mogą zakładać nowe zespoły i wysyłać zaproszenia do graczy, lub wyszukiwać istniejące i wysyłać prośby o dołączenie do nich. Każdy gracz może należeć tylko do jednego zespołu w obrębie jednej gry. Po rozpoczęciu sezonu drużyny wyzywają się wzajemnie na pojedynki (mecze), przez cały czas trwania sezonu. Każdy zespół może rozegrać z każdym tylko jeden mecz w trakcie trwania sezonu. Gracze nie mogą zmieniać zespołów podczas trwania sezonu. Każdy sezon trwa przez z góry określony czas, na początku sezonu wyniki są wyzerowane, po zakończeniu sezonu, wyłaniane są zwycięskie zespoły.
+This project aims to create a system for managing sport and e-sport leagues. Having been developed as a univeristy course assignemnt, it is not intended for commercial use.  
 
-## Przykłady użycia
-- Ogólne
-  - Zaloguj użytkownika
-- Zgłoszenia
-  - Zarejestruj użytkownika
-  - Załóż nowy zespół
-  - Zaproś użytkownika do zespołu
-  - Przyjmij zaproszenie do zespołu
-  - Wyślij prośbę o dodanie do zespołu
-  - Akceptuj prośbę o dodanie do zespołu
-  - Opuść zespół
-- Rozgrywki
-  - Wyzwij zespół na mecz
-  - Akceptuj wyzwanie na mecz
-  - Wprowadź wynik meczu
-  - Sprawdź ranking zespołów
-  - Sprawdź historię wyników meczy
-## Stos technologiczny
+![screenshots](https://i.imgur.com/CtGjuHt.png)
 
-Baza danych: PostgreSQL
-Serwer WWW: Nginx/Apache
-Web framework: Django
-WSGI: Gunicorn
+## Features  
+Application allows users to log in or register via Facebook. Registered users can join an existing tournament or create a new one. User becomes a player after joining a tournament. Each tournament represents one game. Before the tournament games begin, the tournament is in team forming period. During this period, players without a team can request joining a public team (that is, a team that is publicly visible), or accept a team invitation from any team, if they received one. In team forming period, players without a team can create a team, they are then automatically assignet to that team. Players that already have a team in this period can invite others to join their team, or accept a team join request from other players if team is public. After team forming phase is finished, the players can no longer change, create or remove their teams.  
+  
+After deadline for forming teams passes, the tournament enters the season phase. During this phase, teams can challenge each other by creating a match. In current version of the app, two teams can only play one match in one tournament. To complete a match, both teams have to enter their score propositions. If scores in both propositions are equal, both teams' scores are updated. In final version of the app, we want a tournament manager to be notified if two teams cannot agree on a score. Teams' scores can be previewed by team members on their team page, or by any other player on a tournament ranking page.  
 
+# Stack  
+Backend: Python3, Django + plugin: Django Social Auth  
+DB: SQLite  
+Front-end: Django templates + materialize.css  
 
-
-# Model danych
+# Data model  
 ![](https://d2mxuefqeaa7sj.cloudfront.net/s_D35B8BD49B5EB0D54BF7667047B5123D650932141AF033B432BFD1BC4DCD46A8_1513851537903_376a9eea-854b-47eb-a60d-fc20b8f7c39d.png)
-
-## SQL
-
-Generated for postgres:
-
+  
+## SQL schema
+  
+Generated for postgres as a requirement for database course, but never used - see django migrations instead.  
+```
     -- Created by Vertabelo (http://vertabelo.com)
     -- Last modification date: 2017-12-21 10:19:46.002
     
@@ -234,6 +220,14 @@ Generated for postgres:
     
     -- End of file.
     
+```
 
 
+## Extending this project  
 
+Here are some of the things that might be useful in the future:  
+* add support for tournament admin (currently management can only be done via django admin, with access to all tournaments)  
+* add API to allow use from mobile / 3rd party apps  
+* re-write frontend in vue or react for easier embedding  
+* create a mobile client - react native?  
+* check application security  

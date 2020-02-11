@@ -7,7 +7,7 @@ command-not-found==0.3
 cycler==0.10.0
 defer==1.0.6
 defusedxml==0.5.0
-Django==2.0.4
+Django==2.2.10
 Flask==0.12.2
 Flask-RESTful==0.3.6
 html5lib==0.999
